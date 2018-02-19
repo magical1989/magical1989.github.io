@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Hexo</title>
+  <meta name="description" content="Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 201">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 201">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.2%20Receiver,%20ReceiverSupervisor,%20BlockGenerator,%20ReceivedBlockHandler%20详解/0.imgs/060.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.2%20Receiver,%20ReceiverSupervisor,%20BlockGenerator,%20ReceivedBlockHandler%20详解/0.imgs/065.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.2%20Receiver,%20ReceiverSupervisor,%20BlockGenerator,%20ReceivedBlockHandler%20详解/3.imgs/050.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.2%20Receiver,%20ReceiverSupervisor,%20BlockGenerator,%20ReceivedBlockHandler%20详解/0.imgs/065.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.2%20Receiver,%20ReceiverSupervisor,%20BlockGenerator,%20ReceivedBlockHandler%20详解/3.imgs/060.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.2%20Receiver,%20ReceiverSupervisor,%20BlockGenerator,%20ReceivedBlockHandler%20详解/0.imgs/065.png">
+<meta property="og:updated_time" content="2018-02-09T03:48:41.427Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+<meta name="twitter:description" content="Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 201">
+<meta name="twitter:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.2%20Receiver,%20ReceiverSupervisor,%20BlockGenerator,%20ReceivedBlockHandler%20详解/0.imgs/060.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <!-- font-awesome CSS -->
+  <!-- <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"> -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+    
+    
+
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/cofess" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">昵称</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Web Developer &amp; Designer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav">
+        
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            
+            <p>您好，您是第<span id="busuanzi_value_site_uv">0</span>位访客</p>
+            
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+
+    
+      
+
+    
+      
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/02/">February 2018</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.960Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/Q&A 什么是 end-to-end exactly-once/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.954Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.2 Driver 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.946Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.940Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.930Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解/" class="article-date">
+	  <time datetime="2018-02-09T03:49:13.923Z" itemprop="datePublished">2018-02-09</time>
+	</a>
+</span>
+        
+        
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry markdown-body" itemprop="articleBody">
+      
+        <h1 id="Receiver-ReceiverSupervisor-BlockGenerator-ReceivedBlockHandler-详解"><a href="#Receiver-ReceiverSupervisor-BlockGenerator-ReceivedBlockHandler-详解" class="headerlink" title="Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解"></a>Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解</h1><p><strong><em>[酷玩 Spark] Spark Streaming 源码解析系列</em></strong> ，返回目录请 <a href="readme.md">猛戳这里</a></p>
+<p><a href="http://e.qq.com" target="_blank" rel="noopener">「腾讯·广点通」</a>技术团队荣誉出品</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">本系列内容适用范围：</span><br><span class="line"></span><br><span class="line">* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)</span><br><span class="line">* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)</span><br><span class="line">* 2016.11.14 update, Spark 2.0 全系列 √ (已发布：2.0.0, 2.0.1, 2.0.2)</span><br></pre></td></tr></table></figure>
+<p><br><br><br></p>
+<p>阅读本文前，请一定先阅读 <a href="0.1 Spark Streaming 实现思路与模块概述.md">Spark Streaming 实现思路与模块概述</a> 一文，其中概述了 Spark Streaming 的 4 大模块的基本作用，有了全局概念后再看本文对 <code>模块 3：数据产生与导入</code> 细节的解释。</p>
+<h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>我们在前面 <a href="0.1 Spark Streaming 实现思路与模块概述.md">Spark Streaming 实现思路与模块概述</a> 中分析过，Spark Streaming 在程序刚开始运行时：</p>
+<ul>
+<li><p>(1) 由 <code>Receiver</code> 的总指挥 <code>ReceiverTracker</code> 分发多个 job（每个 job 有 1 个 task），到多个 executor 上分别启动 <code>ReceiverSupervisor</code> 实例；</p>
+</li>
+<li><p>(2) 每个 <code>ReceiverSupervisor</code> 启动后将马上生成一个用户提供的 <code>Receiver</code> 实现的实例 —— 该 <code>Receiver</code> 实现可以持续产生或者持续接收系统外数据，比如 <code>TwitterReceiver</code> 可以实时爬取 twitter 数据 —— 并在 <code>Receiver</code> 实例生成后调用 <code>Receiver.onStart()</code>。</p>
+</li>
+</ul>
+<p><img src="0.imgs/060.png" alt="image"></p>
+<pre><code>ReceiverSupervisor 的全限定名是：org.apache.spark.streaming.receiver.ReceiverSupervisor
+Receiver           的全限定名是：org.apache.spark.streaming.receiver.Receiver
+</code></pre><p>(1)(2) 的过程由上图所示，这时 <code>Receiver</code> 启动工作已运行完毕。</p>
+<p>接下来 <code>ReceiverSupervisor</code> 将在 executor 端作为的主要角色，并且：</p>
+<ul>
+<li><p>(3) <code>Receiver</code> 在 <code>onStart()</code> 启动后，就将<strong>持续不断</strong>地接收外界数据，并持续交给 <code>ReceiverSupervisor</code> 进行数据转储；</p>
+</li>
+<li><p>(4) <code>ReceiverSupervisor</code> <strong>持续不断</strong>地接收到 <code>Receiver</code> 转来的数据：</p>
+<ul>
+<li>如果数据很细小，就需要 <code>BlockGenerator</code> 攒多条数据成一块(4a)、然后再成块存储(4b 或 4c)</li>
+<li><p>反之就不用攒，直接成块存储(4b 或 4c)</p>
+</li>
+<li><p>这里 Spark Streaming 目前支持两种成块存储方式，一种是由 <code>blockManagerskManagerBasedBlockHandler</code> 直接存到 executor 的内存或硬盘，另一种由 <code>WriteAheadLogBasedBlockHandler</code> 是同时写 WAL(4c) 和 executor 的内存或硬盘</p>
+</li>
+</ul>
+</li>
+<li><p>(5) 每次成块在 executor 存储完毕后，<code>ReceiverSupervisor</code> 就会及时上报块数据的 meta 信息给 driver 端的 <code>ReceiverTracker</code>；这里的 meta 信息包括数据的标识 id，数据的位置，数据的条数，数据的大小等信息。</p>
+</li>
+<li><p>(6) <code>ReceiverTracker</code> 再将收到的块数据 meta 信息直接转给自己的成员 <code>ReceivedBlockTracker</code>，由 <code>ReceivedBlockTracker</code> 专门管理收到的块数据 meta 信息。</p>
+</li>
+</ul>
+<p><img src="0.imgs/065.png" alt="image"></p>
+<pre><code>BlockGenerator                 的全限定名是：org.apache.spark.streaming.receiver.BlockGenerator
+BlockManagerBasedBlockHandler  的全限定名是：org.apache.spark.streaming.receiver.BlockManagerBasedBlockHandler
+WriteAheadLogBasedBlockHandler 的全限定名是：org.apache.spark.streaming.receiver.WriteAheadLogBasedBlockHandler
+ReceivedBlockTracker           的全限定名是：org.apache.spark.streaming.scheduler.ReceivedBlockTracker
+ReceiverInputDStream           的全限定名是：org.apache.spark.streaming.dstream.ReceiverInputDStream
+</code></pre><p>这里 (3)(4)(5)(6) 的过程是一直<strong>持续不断</strong>地发生的，我们也将其在上图里标识出来。</p>
+<p>后续在 driver 端，就由 <code>ReceiverInputDStream</code> 在每个 batch 去检查 <code>ReceiverTracker</code> 收到的块数据 meta 信息，界定哪些新数据需要在本 batch 内处理，然后生成相应的 <code>RDD</code> 实例去处理这些块数据。</p>
+<p>下面我们来详解 Receiver, ReceiverSupervisor, BlockGenerator 这三个类。</p>
+<h2 id="Receiver-详解"><a href="#Receiver-详解" class="headerlink" title="Receiver 详解"></a>Receiver 详解</h2><p><code>Receiver</code> 是一个 abstract 的基类：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 Receiver</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Receiver</span>[<span class="type">T</span>](<span class="params">val storageLevel: <span class="type">StorageLevel</span></span>) <span class="keyword">extends</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 需要子类实现</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">onStart</span></span>()</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">onStop</span></span>()</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 基类实现，供子类调用</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">store</span></span>(dataItem: <span class="type">T</span>) &#123;...&#125;                  <span class="comment">// 【存储单条小数据】</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">store</span></span>(dataBuffer: <span class="type">ArrayBuffer</span>[<span class="type">T</span>]) &#123;...&#125;   <span class="comment">// 【存储数组形式的块数据】</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">store</span></span>(dataIterator: <span class="type">Iterator</span>[<span class="type">T</span>]) &#123;...&#125;    <span class="comment">// 【存储 iterator 形式的块数据】</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">store</span></span>(bytes: <span class="type">ByteBuffer</span>) &#123;...&#125;            <span class="comment">// 【存储 ByteBuffer 形式的块数据】</span></span><br><span class="line">  </span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里需要 <code>Receiver</code> 子类具体实现的是，<code>onStart()</code> 和 <code>onStop()</code> 方法。<code>onStart()</code> 是在 executor 端被 <code>ReceiverSupervisor</code> 调用的，而且 <code>onStart()</code> 的实现应该很快就能返回，不要写成阻塞式的。</p>
+<p>比如，Spark Streaming 自带的 <code>SocketReceiver</code> 的 <code>onStart()</code> 实现如下：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 SocketReceiver</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">onStart</span></span>() &#123;</span><br><span class="line">  <span class="keyword">new</span> <span class="type">Thread</span>(<span class="string">"Socket Receiver"</span>) &#123;</span><br><span class="line">    setDaemon(<span class="literal">true</span>)</span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">run</span></span>() &#123; receive() &#125;</span><br><span class="line">  &#125;.start()  <span class="comment">// 【仅新拉起了一个线程来接收数据】</span></span><br><span class="line">  <span class="comment">// 【onStart() 方法很快就返回了】</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>另外的 <code>onStop()</code> 实现，就是在 <code>Receiver</code> 被关闭时调用了，可以做一些 close 工作。</p>
+<p>我们看当 <code>Receiver</code> 真正启动起来后，可以开始产生或者接收数据了，那接收到的数据该怎么存到 Spark Streaming 里？</p>
+<p>答案很简单，就是直接调用 <code>store()</code> 方法即可。<code>Receiver</code> 基类提供了 4 种签名的 <code>store()</code> 方法，分别可用于存储：</p>
+<ul>
+<li>(a) 单条小数据</li>
+<li>(b) 数组形式的块数据</li>
+<li>(c) iterator 形式的块数据</li>
+<li>(d) ByteBuffer 形式的块数据</li>
+</ul>
+<p>这 4 种签名的 <code>store()</code> 的实现都是直接将数据转给 <code>ReceiverSupervisor</code>，由 <code>ReceiverSupervisor</code> 来具体负责存储。</p>
+<p>所以，一个具体的 <code>Receiver</code> 子类实现，只要在 <code>onStart()</code> 里新拉起数据接收线程，并在接收到数据时 <code>store()</code> 到 Spark Streamimg 框架就可以了。</p>
+<h2 id="ReceiverSupervisor-详解"><a href="#ReceiverSupervisor-详解" class="headerlink" title="ReceiverSupervisor 详解"></a>ReceiverSupervisor 详解</h2><p>我们在 <a href="3.1 Receiver 分发详解.md">Receiver 分发详解</a> 里分析过，在 executor 端，分发 <code>Receiver</code> 的 <code>Job</code> 的 <code>Task</code> 执行的实现是：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(iterator: <span class="type">Iterator</span>[<span class="type">Receiver</span>[_]]) =&gt; &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">val</span> receiver = iterator.next()</span><br><span class="line">  assert(iterator.hasNext == <span class="literal">false</span>)</span><br><span class="line">  <span class="comment">// 【ReceiverSupervisor 的具体实现 ReceiverSupervisorImpl】</span></span><br><span class="line">  <span class="keyword">val</span> supervisor = <span class="keyword">new</span> <span class="type">ReceiverSupervisorImpl</span>(receiver, ...)</span><br><span class="line">  supervisor.start()</span><br><span class="line">  supervisor.awaitTermination()</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>ReceiverSupervisor</code> 定义了一些方法接口，其具体的实现类是 <code>ReceiverSupervisorImpl</code>。</p>
+<p>我们看到在上面的代码中，executor 端会先 <code>new</code> 一个 <code>ReceiverSupervisorImpl</code>，然后 <code>ReceiverSupervisorImpl.start()</code>。这里 <code>.start()</code> 很重要的工作就是调用 <code>Receiver.onStart()</code>，来启动 <code>Receiver</code> 的数据接收线程：</p>
+<p><img src="3.imgs/050.png" alt="image"></p>
+<p><code>start()</code> 成功后，<code>ReceiverSurpervisorImpl</code> 最重要的工作就是接收 <code>Receiver</code> 给 <code>store()</code> 过来的数据了。</p>
+<p><code>ReceiverSurpervisorImpl</code> 有 4 种签名的 <code>push()</code> 方法，被 <code>Receiver</code> 的 4 种 <code>store()</code> 一一调用。不过接下来对单条小数据和三种块数据的处理稍有区别。</p>
+<p>单条的情况，<code>ReceiverSupervisorImpl</code> 要在 <code>BlockGenerator</code> 的协助下，将多个单条的数据积攒为一个块数据，然后重新调用 <code>push</code> 交给 <code>ReceiverSurpervisorImpl</code> 来处理这个块数据。我们一会再详解 <code>BlockGenerator</code> 的这个过程。</p>
+<p>所以接下来，我们主要看这 3 个存储块数据的 <code>push...()</code> 方法，它们的实现非常简单：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 ReceiverSupervisorImpl</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">pushArrayBuffer</span></span>(arrayBuffer: <span class="type">ArrayBuffer</span>[_], ...) &#123;</span><br><span class="line">  pushAndReportBlock(<span class="type">ArrayBufferBlock</span>(...), ...)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">pushIterator</span></span>(iterator: <span class="type">Iterator</span>[_], ...) &#123;</span><br><span class="line">  pushAndReportBlock(<span class="type">IteratorBlock</span>(...), ...)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">pushBytes</span></span>(bytes: <span class="type">ByteBuffer</span>, ...)&#123;</span><br><span class="line">  pushAndReportBlock(<span class="type">ByteBufferBlock</span>(...), ...)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">pushAndReportBlock</span></span>(receivedBlock: <span class="type">ReceivedBlock</span>, ...) &#123;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>顾名思义，这 3 个存储块数据的 <code>push...()</code> 方法即是将自己的数据统一包装为 <code>ReceivedBlock</code>，然后由 <code>pushAndReportBlock()</code> 做两件事情：</p>
+<ul>
+<li>(a) push：将 <code>ReceivedBlock</code> 交给 <code>ReceivedBlockHandler</code> 来存储，具体的，可以在 <code>ReceivedBlockHandler</code>  的两种存储实现里二选一</li>
+<li>(b) report：将已存储好的 <code>ReceivedBlock</code> 的块数据 meta 信息报告给 <code>ReceiverTracker</code></li>
+</ul>
+<p>上面的过程可以总结为：</p>
+<p><img src="0.imgs/065.png" alt="image"></p>
+<h2 id="ReceivedBlockHandler-详解"><a href="#ReceivedBlockHandler-详解" class="headerlink" title="ReceivedBlockHandler 详解"></a>ReceivedBlockHandler 详解</h2><p><code>ReceivedBlockHandler</code> 是一个接口类，在 executor 端负责对接收到的块数据进行具体的存储和清理：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 ReceivedBlockHandler</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>[streaming] <span class="class"><span class="keyword">trait</span> <span class="title">ReceivedBlockHandler</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Store a received block with the given block id and return related metadata */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">storeBlock</span></span>(blockId: <span class="type">StreamBlockId</span>, receivedBlock: <span class="type">ReceivedBlock</span>): <span class="type">ReceivedBlockStoreResult</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Cleanup old blocks older than the given threshold time */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">cleanupOldBlocks</span></span>(threshTime: <span class="type">Long</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>ReceivedBlockHandler</code> 有两个具体的存储策略的实现：</p>
+<ul>
+<li>(a) <code>BlockManagerBasedBlockHandler</code>，是直接存到 executor 的内存或硬盘</li>
+<li>(b) <code>WriteAheadLogBasedBlockHandler</code>，是先写 WAL，再存储到 executor 的内存或硬盘</li>
+</ul>
+<h3 id="a-BlockManagerBasedBlockHandler-实现"><a href="#a-BlockManagerBasedBlockHandler-实现" class="headerlink" title="(a) BlockManagerBasedBlockHandler 实现"></a>(a) BlockManagerBasedBlockHandler 实现</h3><p><code>BlockManagerBasedBlockHandler</code> 主要是直接存储到 Spark Core 里的 <code>BlockManager</code> 里。</p>
+<p><code>BlockManager</code> 将在 executor 端接收 <code>Block</code> 数据，而在 driver 端维护 <code>Block</code> 的 meta 信息。 <code>BlockManager</code> 根据存储者的 <code>StorageLevel</code> 要求来存到本 executor 的 <code>RAM</code> 或者 <code>DISK</code>，也可以同时再额外复制一份到其它 executor 的 <code>RAM</code> 或者 <code>DISK</code>。<a href="http://spark.apache.org/docs/latest/programming-guide.html#rdd-persistence" target="_blank" rel="noopener">点这里</a>查看 <code>StorageLevel</code> 支持的所有枚举值。</p>
+<p>下面是 <code>BlockManagerBasedBlockHandler.store()</code> 向 <code>BlockManager</code> 存储 3 种块数据的具体实现：<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 BlockManagerBasedBlockHandler</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">storeBlock</span></span>(blockId: <span class="type">StreamBlockId</span>, block: <span class="type">ReceivedBlock</span>): <span class="type">ReceivedBlockStoreResult</span> = &#123;</span><br><span class="line">  <span class="keyword">val</span> putResult: <span class="type">Seq</span>[(<span class="type">BlockId</span>, <span class="type">BlockStatus</span>)] = block <span class="keyword">match</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> <span class="type">ArrayBufferBlock</span>(arrayBuffer) =&gt;</span><br><span class="line">      blockManager.putIterator(blockId, arrayBuffer.iterator, ...)   <span class="comment">// 【存储数组到 blockManager 里】</span></span><br><span class="line">    <span class="keyword">case</span> <span class="type">IteratorBlock</span>(iterator) =&gt;</span><br><span class="line">      blockManager.putIterator(blockId, countIterator, ...)          <span class="comment">// 【存储 iterator 到 blockManager 里】</span></span><br><span class="line">    <span class="keyword">case</span> <span class="type">ByteBufferBlock</span>(byteBuffer) =&gt;</span><br><span class="line">      blockManager.putBytes(blockId, byteBuffer, ...)                <span class="comment">// 【存储 ByteBuffer 到 blockManager 里】</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="b-WriteAheadLogBasedBlockHandler-实现"><a href="#b-WriteAheadLogBasedBlockHandler-实现" class="headerlink" title="(b) WriteAheadLogBasedBlockHandler 实现"></a>(b) WriteAheadLogBasedBlockHandler 实现</h3><p><code>WriteAheadLogBasedBlockHandler</code> 的实现则是同时写到可靠存储的 WAL 中和 executor 的 <code>BlockManager</code> 中；在两者都写完成后，再上报块数据的 meta 信息。</p>
+<p><code>BlockManager</code> 中的块数据是计算时首选使用的，只有在 executor 失效时，才去 WAL 中读取写入过的数据。</p>
+<p>同其它系统的 WAL 一样，数据是完全顺序地写入 WAL 的；在稍后上报块数据的 meta 信息，就额外包含了块数据所在的 WAL 的路径，及在 WAL 文件内的偏移地址和长度。</p>
+<p>具体的写入逻辑如下：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 WriteAheadLogBasedBlockHandler</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">storeBlock</span></span>(blockId: <span class="type">StreamBlockId</span>, block: <span class="type">ReceivedBlock</span>): <span class="type">ReceivedBlockStoreResult</span> = &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">// 【生成向 BlockManager 存储数据的 future】</span></span><br><span class="line">  <span class="keyword">val</span> storeInBlockManagerFuture = <span class="type">Future</span> &#123;</span><br><span class="line">    <span class="keyword">val</span> putResult =</span><br><span class="line">      blockManager.putBytes(blockId, serializedBlock, effectiveStorageLevel, tellMaster = <span class="literal">true</span>)</span><br><span class="line">    <span class="keyword">if</span> (!putResult.map &#123; _._1 &#125;.contains(blockId)) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">SparkException</span>(</span><br><span class="line">        <span class="string">s"Could not store <span class="subst">$blockId</span> to block manager with storage level <span class="subst">$storageLevel</span>"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 【生成向 WAL 存储数据的 future】</span></span><br><span class="line">  <span class="keyword">val</span> storeInWriteAheadLogFuture = <span class="type">Future</span> &#123;</span><br><span class="line">    writeAheadLog.write(serializedBlock, clock.getTimeMillis())</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 【开始执行两个 future、等待两个 future 都结束】</span></span><br><span class="line">  <span class="keyword">val</span> combinedFuture = storeInBlockManagerFuture.zip(storeInWriteAheadLogFuture).map(_._2)</span><br><span class="line">  <span class="keyword">val</span> walRecordHandle = <span class="type">Await</span>.result(combinedFuture, blockStoreTimeout)</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 【返回存储结果，用于后续的块数据 meta 上报】</span></span><br><span class="line">  <span class="type">WriteAheadLogBasedStoreResult</span>(blockId, numRecords, walRecordHandle)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="BlockGenerator-详解"><a href="#BlockGenerator-详解" class="headerlink" title="BlockGenerator 详解"></a>BlockGenerator 详解</h2><p>最后我们来补充一下 <code>ReceiverSupervisorImpl</code> 在收到单块条小数据后，委托 <code>BlockGenerator</code> 进行积攒，并封装多条小数据为一整个块数据的详细过程。</p>
+<p><code>BlockGenerator</code> 在内部主要是维护一个临时的变长数组 <code>currentBuffer</code>，每收到一条 <code>ReceiverSupervisorImpl</code> 转发来的数据就加入到这个 <code>currentBuffer</code> 数组中。</p>
+<p>这里非常需要注意的地方，就是在加入 <code>currentBuffer</code> 数组时会先由 <code>rateLimiter</code> 检查一下速率，是否加入的频率已经太高。如果太高的话，就需要 block 住，等到下一秒再开始添加。这里的最高频率是由 <code>spark.streaming.receiver.maxRate (default = Long.MaxValue)</code> 控制的，是单个 <code>Receiver</code> 每秒钟允许添加的条数。控制了这个速率，就控制了整个 Spark Streaming 系统每个 batch 需要处理的最大数据量。之前版本的 Spark Streaming 是静态设置了这样的一个上限并由所有 <code>Receiver</code> 统一遵守；但在 1.5.0 以来，Spark Streaming 加入了分别动态控制每个 <code>Receiver</code> 速率的特性，这个我们会单独有一篇文章介绍。</p>
+<p>然后会维护一个定时器，每隔 <code>blockInterval</code> 的时间就生成一个新的空变长数组替换老的数组作为新的 <code>currentBuffer</code> ，并把老的数组加入到一个自己的一个 <code>blocksForPushing</code> 的队列里。</p>
+<p>这个 <code>blocksForPushing</code> 队列实际上是一个 <code>ArrayBlockingQueue</code>，大小由 <code>spark.streaming.blockQueueSize（默认 = 10）</code> 来控制。然后就有另外的一个线程专门从这个队列里取出来已经包装好的块数据，然后调用 <code>ReceiverSupervisorImpl.pushArrayBuffer(...)</code> 来将块数据交回给 <code>ReceiverSupervisorImpl</code>。</p>
+<p><code>BlockGenerator</code> 工作的整个过程示意图如下：</p>
+<p><img src="3.imgs/060.png" alt="image"> <em>//TODO(lwlin): 此图风格与本系列文章不符，需要美化</em></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>总结我们在本文所做的详解 —— <code>ReceiverSupervisor</code> 将在 executor 端作为的主要角色，并且：</p>
+<ul>
+<li><p>(3) <code>Receiver</code> 在 <code>onStart()</code> 启动后，就将<strong>持续不断</strong>地接收外界数据，并持续交给 <code>ReceiverSupervisor</code> 进行数据转储；</p>
+</li>
+<li><p>(4) <code>ReceiverSupervisor</code> <strong>持续不断</strong>地接收到 <code>Receiver</code> 转来的数据：</p>
+<ul>
+<li>如果数据很细小，就需要 <code>BlockGenerator</code> 攒多条数据成一块(4a)、然后再成块存储(4b 或 4c)</li>
+<li><p>反之就不用攒，直接成块存储(4b 或 4c)</p>
+</li>
+<li><p>这里 Spark Streaming 目前支持两种成块存储方式，一种是由 <code>blockManagerskManagerBasedBlockHandler</code> 直接存到 executor 的内存或硬盘，另一种由 <code>WriteAheadLogBasedBlockHandler</code> 是同时写 WAL(4c) 和 executor 的内存或硬盘</p>
+</li>
+</ul>
+</li>
+<li><p>(5) 每次成块在 executor 存储完毕后，<code>ReceiverSupervisor</code> 就会及时上报块数据的 meta 信息给 driver 端的 <code>ReceiverTracker</code>；这里的 meta 信息包括数据的标识 id，数据的位置，数据的条数，数据的大小等信息。</p>
+</li>
+<li><p>(6) <code>ReceiverTracker</code> 再将收到的块数据 meta 信息直接转给自己的成员 <code>ReceivedBlockTracker</code>，由 <code>ReceivedBlockTracker</code> 专门管理收到的块数据 meta 信息。</p>
+</li>
+</ul>
+<p><img src="0.imgs/065.png" alt="image"></p>
+<p><br><br><br></p>
+<p>（本文完，参与本文的讨论请 <a href="https://github.com/proflin/CoolplaySpark/issues/7" target="_blank" rel="noopener">猛戳这里</a>，返回目录请 <a href="readme.md">猛戳这里</a>）</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解/" title="" target="_blank" rel="external">http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/cofess" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/cofess" target="_blank"><span class="text-dark">昵称</span><small class="ml-1x">Web Developer &amp; Designer</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+       
+    <div id="uyan_frame"></div>
+
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" title="(no title)"><i class="icon icon-angle-left" aria-hidden="true"></i>&nbsp;&nbsp;Newer</a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.1 Receiver 分发详解/" title="(no title)">Older&nbsp;&nbsp;<i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning hidden-xs" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-tit">
+            <p>Thank you for your support, I will continue to work hard!</p>
+          </div>
+          <div class="donate-payimg">
+            <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+          </div>
+          <p class="text-muted mv">Scan this qrcode</p>
+          <div class="donate-payselect">
+            <div class="pay_item checked" data-id="alipay" data-src="/images/donate/alipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-alipay" value="alipay" checked>
+                <label class="pay_logo clickable" for="input-alipay"><img src="/images/donate/alipay.jpg" alt="alipay" /></label>
+              </div>
+            </div>
+            <div class="pay_item" data-id="weipay" data-src="/images/donate/weipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-weipay" value="weipay">
+                <label class="pay_logo clickable" for="input-weipay"><img src="/images/donate/weipay.jpg" alt="weipay" /></label>
+              </div>
+            </div>
+          </div>
+          <div class="text-grey">
+            <p>Scan this qrcode, you can sweep yards reward oh!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+  
+    
+    
+    
+        <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+    
+    
+    
+        
+<script defer src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+    
+    
+        
+    
+    <script defer type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=[object Object]"></script>
+
+
+    
+    
+
+
+
+</body>
+</html>

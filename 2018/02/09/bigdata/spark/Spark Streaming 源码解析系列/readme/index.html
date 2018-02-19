@@ -16,19 +16,26 @@
   <meta http-equiv="window-target" content="_top" />
   
   
-  <title>Hello World | Hexo</title>
-  <meta name="description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+  <title>Hexo</title>
+  <meta name="description" content="Spark Streaming 源码解析系列「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)* 2016.11.14 update, Spark 2.0 全系列 √">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello World">
-<meta property="og:url" content="http://yoursite.com/2018/01/29/hello-world/index.html">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
-<meta property="og:updated_time" content="2018-01-29T01:52:14.136Z">
+<meta property="og:description" content="Spark Streaming 源码解析系列「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)* 2016.11.14 update, Spark 2.0 全系列 √">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/Spark%20%E8%B5%84%E6%BA%90%E9%9B%86%E5%90%88/resources/wechat_spark_streaming_small_.PNG">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/readme/0.imgs/001.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/readme/0.imgs/002.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/readme/0.imgs/005.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/readme/0.imgs/006.png">
+<meta property="og:image" content="https://licensebuttons.net/l/by-nc/4.0/88x31.png">
+<meta property="og:updated_time" content="2018-02-09T03:48:41.442Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello World">
-<meta name="twitter:description" content="Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick">
+<meta name="twitter:title" content="Hexo">
+<meta name="twitter:description" content="Spark Streaming 源码解析系列「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)* 2016.11.14 update, Spark 2.0 全系列 √">
+<meta name="twitter:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/Spark%20%E8%B5%84%E6%BA%90%E9%9B%86%E5%90%88/resources/wechat_spark_streaming_small_.PNG">
   <!-- Canonical links -->
-  <link rel="canonical" href="http://yoursite.com/2018/01/29/hello-world/index.html">
+  <link rel="canonical" href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/index.html">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -335,23 +342,15 @@
   
 <main class="main" role="main">
   <div class="content">
-  <article id="post-hello-world" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+  <article id="post-bigdata/spark/Spark Streaming 源码解析系列/readme" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
     
     <div class="article-header">
-      
-        
-  
-    <h1 class="article-title" itemprop="name">
-      Hello World
-    </h1>
-  
-
       
       <div class="article-meta">
         <span class="article-date">
     <i class="icon icon-calendar-check"></i>
-	<a href="/2018/01/29/hello-world/" class="article-date">
-	  <time datetime="2018-01-29T01:52:14.136Z" itemprop="datePublished">2018-01-29</time>
+	<a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/" class="article-date">
+	  <time datetime="2018-02-09T03:49:13.960Z" itemprop="datePublished">2018-02-09</time>
 	</a>
 </span>
         
@@ -366,21 +365,74 @@
 	</span>
 
 
-        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/01/29/hello-world/#comments" class="article-comment-link">Comments</a></span>
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/#comments" class="article-comment-link">Comments</a></span>
         
       </div>
     </div>
     <div class="article-entry markdown-body" itemprop="articleBody">
       
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="noopener">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="noopener">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="noopener">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+        <h2 id="Spark-Streaming-源码解析系列"><a href="#Spark-Streaming-源码解析系列" class="headerlink" title="Spark Streaming 源码解析系列"></a>Spark Streaming 源码解析系列</h2><p><a href="http://e.qq.com" target="_blank" rel="noopener">「腾讯·广点通」</a>技术团队荣誉出品</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">本系列内容适用范围：</span><br><span class="line"></span><br><span class="line">* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)</span><br><span class="line">* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)</span><br><span class="line">* 2016.11.14 update, Spark 2.0 全系列 √ (已发布：2.0.0, 2.0.1, 2.0.2)</span><br></pre></td></tr></table></figure>
+<ul>
+<li><em>概述</em><ul>
+<li><a href="0.1%20Spark%20Streaming%20实现思路与模块概述.md">0.1 Spark Streaming 实现思路与模块概述</a></li>
+</ul>
+</li>
+<li><em>模块 1：DAG 静态定义</em><ul>
+<li><a href="1.1%20DStream%2C%20DStreamGraph%20详解.md">1.1 DStream, DStreamGraph 详解</a></li>
+<li><a href="1.2%20DStream%20生成%20RDD%20实例详解.md">1.2 DStream 生成 RDD 实例详解</a></li>
+</ul>
+</li>
+<li><em>模块 2：Job 动态生成</em><ul>
+<li><a href="2.1%20JobScheduler%2C%20Job%2C%20JobSet%20详解.md">2.1 JobScheduler, Job, JobSet 详解</a></li>
+<li><a href="2.2%20JobGenerator%20详解.md">2.2 JobGenerator 详解</a></li>
+</ul>
+</li>
+<li><em>模块 3：数据产生与导入</em><ul>
+<li><a href="3.1%20Receiver%20分发详解.md">3.1 Receiver 分发详解</a> </li>
+<li><a href="3.2%20Receiver%2C%20ReceiverSupervisor%2C%20BlockGenerator%2C%20ReceivedBlockHandler%20详解.md">3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解</a></li>
+<li><a href="3.3%20ReceiverTraker%2C%20ReceivedBlockTracker%20详解.md">3.3 ReceiverTraker, ReceivedBlockTracker 详解</a></li>
+</ul>
+</li>
+<li><em>模块 4：长时容错</em><ul>
+<li><a href="4.1%20Executor%20端长时容错详解.md">4.1 Executor 端长时容错详解</a></li>
+<li><a href="4.2%20Driver%20端长时容错详解.md">4.2 Driver 端长时容错详解</a></li>
+</ul>
+</li>
+<li><em>StreamingContext</em><ul>
+<li>5.1 StreamingContext 详解</li>
+</ul>
+</li>
+<li><em>一些资源和 Q&amp;A</em><ul>
+<li><a href="https://github.com/lw-lin/CoolplaySpark/tree/master/Spark%20%E8%B5%84%E6%BA%90%E9%9B%86%E5%90%88" target="_blank" rel="noopener">Spark 资源集合</a> (包括 Spark Summit 视频，Spark 中文微信群等资源集合)<br><img src="../Spark%20%E8%B5%84%E6%BA%90%E9%9B%86%E5%90%88/resources/wechat_spark_streaming_small_.PNG" alt="wechat_spark_streaming_small"></li>
+<li><a href="Q%26A%20什么是%20end-to-end%20exactly-once.md">(Q&amp;A) 什么是 end-to-end exactly-once?</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="致谢"><a href="#致谢" class="headerlink" title="致谢"></a>致谢</h2><ul>
+<li>Github @wongxingjun 同学指出 3 处 typo，并提 Pull Request 修正（PR 已合并）</li>
+<li>Github @endymecy 同学指出 2 处 typo，并提 Pull Request 修正（PR 已合并）</li>
+<li>Github @xiaoguoqiang 同学指出 1 处 typo，并提 Pull Request 修正（PR 已合并）</li>
+<li>Github 张瀚 (@AntikaSmith) 同学指出 1 处 问题（已修正）</li>
+<li>Github Tao Meng (@mtunique) 同学指出 1 处 typo，并提 Pull Request 修正（PR 已合并）</li>
+<li>Github @ouyangshourui 同学指出 1 处问题，并提 Pull Request 修正（PR 已合并）</li>
+<li>Github @jacksu 同学指出 1 处问题，并提 Pull Request 修正（PR 已合并）</li>
+<li>Github @klion26 同学指出 1 处 typo（已修正）</li>
+<li>Github @397090770 同学指出 1 处配图笔误（已修正）</li>
+<li>Github @ubtaojiang1982 同学指出 1 处 typo（已修正）</li>
+<li>Github @marlin5555 同学指出 1 处配图遗漏信息（已修正）</li>
+<li>Weibo @wyggggo 同学指出 1 处 typo（已修正）</li>
+</ul>
+<h2 id="Spark-Streaming-史前史-1"><a href="#Spark-Streaming-史前史-1" class="headerlink" title="Spark Streaming 史前史(1)"></a>Spark Streaming 史前史(1)</h2><p>作为跑在商业硬件上的大数据处理框架，Apache Hadoop 在诞生后的几年内（2005~今）火的一塌糊涂，几乎成为了业界处理大数据的事实上的标准工具：</p>
+<p><img src="0.imgs/001.png" alt="iamge"></p>
+<h2 id="Spark-Streaming-史前史-2"><a href="#Spark-Streaming-史前史-2" class="headerlink" title="Spark Streaming 史前史(2)"></a>Spark Streaming 史前史(2)</h2><p>不过大家逐渐发现还需要有单独针对流式数据（其特点是源数据实时性高，要求处理延迟低）的处理需求；于是自 2010 年起又流行起了很多通用流数据处理框架，这种与 Hadoop 等批处理框架配合使用的“批+实时”的双引擎架构又成为了当前事实上的标准：</p>
+<p><img src="0.imgs/002.png" alt="iamge"></p>
+<p>  ps: 前段时间跟一位前 Googler（很巧他是 MillWheel 的第一批用户）一起吃饭时，了解到 MillWheel 原来是 2010 年左右开发的，据说极其极其好用。</p>
+<h2 id="Spark-Streaming-诞生"><a href="#Spark-Streaming-诞生" class="headerlink" title="Spark Streaming 诞生"></a>Spark Streaming 诞生</h2><p><img src="0.imgs/005.png" alt="iamge"></p>
+<p><img src="0.imgs/006.png" alt="iamge"></p>
+<p>本系列文章，就来详解发布于 2013 年的 Spark Streaming。</p>
+<h2 id="知识共享"><a href="#知识共享" class="headerlink" title="知识共享"></a>知识共享</h2><p><img src="https://licensebuttons.net/l/by-nc/4.0/88x31.png" alt=""></p>
+<p>除非另有注明，本《Spark Streaming 源码解析系列》系列文章使用 <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC（署名-非商业性使用）</a> 知识共享许可协议。</p>
 
       
     </div>
@@ -390,7 +442,7 @@
     
     <li class="post-copyright-link hidden-xs">
       <strong>本文链接：</strong>
-      <a href="http://yoursite.com/2018/01/29/hello-world/" title="Hello World" target="_blank" rel="external">http://yoursite.com/2018/01/29/hello-world/</a>
+      <a href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/" title="" target="_blank" rel="external">http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/</a>
     </li>
     
     <li class="post-copyright-license">
@@ -438,10 +490,10 @@
   
   <ul class="pager pull-left">
     
-    <li class="prev">
-      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/0.1 Spark Streaming 实现思路与模块概述/" title="(no title)"><i class="icon icon-angle-left" aria-hidden="true"></i>&nbsp;&nbsp;Newer</a>
-    </li>
     
+    <li class="next">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/Q&A 什么是 end-to-end exactly-once/" title="(no title)">Older&nbsp;&nbsp;<i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
     
   </ul>
   

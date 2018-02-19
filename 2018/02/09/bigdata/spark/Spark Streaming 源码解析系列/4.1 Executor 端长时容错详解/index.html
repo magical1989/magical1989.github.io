@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Hexo</title>
+  <meta name="description" content="Executor 端长时容错详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Executor 端长时容错详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/4.1%20Executor%20端长时容错详解/0.imgs/040.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/4.1%20Executor%20端长时容错详解/0.imgs/065.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/4.1%20Executor%20端长时容错详解/img.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/4.1%20Executor%20端长时容错详解/0.imgs/075a.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/4.1%20Executor%20端长时容错详解/0.imgs/075b.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/4.1%20Executor%20端长时容错详解/0.imgs/075c.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/4.1%20Executor%20端长时容错详解/0.imgs/075d.png">
+<meta property="og:updated_time" content="2018-02-09T03:48:41.438Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+<meta name="twitter:description" content="Executor 端长时容错详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.">
+<meta name="twitter:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/4.1%20Executor%20端长时容错详解/0.imgs/040.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <!-- font-awesome CSS -->
+  <!-- <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"> -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+    
+    
+
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/cofess" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">昵称</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Web Developer &amp; Designer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav">
+        
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            
+            <p>您好，您是第<span id="busuanzi_value_site_uv">0</span>位访客</p>
+            
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+
+    
+      
+
+    
+      
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/02/">February 2018</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.960Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/Q&A 什么是 end-to-end exactly-once/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.954Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.2 Driver 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.946Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.940Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.930Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/" class="article-date">
+	  <time datetime="2018-02-09T03:49:13.940Z" itemprop="datePublished">2018-02-09</time>
+	</a>
+</span>
+        
+        
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry markdown-body" itemprop="articleBody">
+      
+        <h1 id="Executor-端长时容错详解"><a href="#Executor-端长时容错详解" class="headerlink" title="Executor 端长时容错详解"></a>Executor 端长时容错详解</h1><p><strong><em>[酷玩 Spark] Spark Streaming 源码解析系列</em></strong> ，返回目录请 <a href="readme.md">猛戳这里</a></p>
+<p><a href="http://e.qq.com" target="_blank" rel="noopener">「腾讯·广点通」</a>技术团队荣誉出品</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">本系列内容适用范围：</span><br><span class="line"></span><br><span class="line">* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)</span><br><span class="line">* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)</span><br><span class="line">* 2016.11.14 update, Spark 2.0 全系列 √ (已发布：2.0.0, 2.0.1, 2.0.2)</span><br></pre></td></tr></table></figure>
+<p><br><br><br></p>
+<p>阅读本文前，请一定先阅读 <a href="0.1 Spark Streaming 实现思路与模块概述.md">Spark Streaming 实现思路与模块概述</a> 一文，其中概述了 Spark Streaming 的 4 大模块的基本作用，有了全局概念后再看本文对 <code>模块 4：长时容错</code> 细节的解释。</p>
+<h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>之前的详解我们详解了完成 Spark Streamimg 基于 Spark Core 所新增功能的 3 个模块，接下来我们看一看第 4 个模块将如何保障 Spark Streaming 的长时运行 —— 也就是，如何与前 3 个模块结合，保障前 3 个模块的长时运行。</p>
+<p>通过前 3 个模块的关键类的分析，我们可以知道，保障模块 1 和 2 需要在 driver 端完成，保障模块 3 需要在 executor 端和 driver 端完成。</p>
+<p><img src="0.imgs/040.png" alt="image"></p>
+<p>本文我们详解 executor 端的保障。</p>
+<p>在 executor 端，<code>ReceiverSupervisor</code> 和 <code>Receiver</code> 失效后直接重启就 OK 了，关联是保障收到的块数据的安全。保障了源头块数据，就能够保障 RDD DAG （Spark Core 的 lineage）重做。</p>
+<p>Spark Streaming 对源头块数据的保障，分为 4 个层次，全面、相互补充，又可根据不同场景灵活设置：</p>
+<ul>
+<li>(1) 热备</li>
+<li>(2) 冷备</li>
+<li>(3) 重放</li>
+<li>(4) 忽略</li>
+</ul>
+<h2 id="1-热备"><a href="#1-热备" class="headerlink" title="(1) 热备"></a>(1) 热备</h2><p>热备是指在存储块数据时，将其存储到本 executor、并同时 replicate 到另外一个 executor 上去。这样在一个 replica 失效后，可以立刻无感知切换到另一份 replica 进行计算。</p>
+<p>实现方式是，在实现自己的 <code>Receiver</code> 时，即指定一下 <code>StorageLevel</code> 为 <code>MEMORY_ONLY_2</code> 或 <code>MEMORY_AND_DISK_2</code> 就可以了。</p>
+<p>比如这样：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyReceiver</span> <span class="keyword">extends</span> <span class="title">Receiver</span>(<span class="params"><span class="type">StorageLevel</span>.<span class="type">MEMORY_ONLY_2</span></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">onStart</span></span>(): <span class="type">Unit</span> = &#123;&#125;</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">onStop</span></span>(): <span class="type">Unit</span> = &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样，<code>Receiver</code> 在将数据 <code>store()</code> 给 <code>ReceiverSupervisorImpl</code> 的时候，将同时指明此 <code>storageLevel</code>。<code>ReceiverSupervisorImpl</code> 也将根据此 <code>storageLevel</code> 将块数据具体的存储给 <code>BlockManager</code>。</p>
+<p>然后就是依靠 <code>BlockManager</code> 进行热备。具体的 —— 我们以 <code>ReceiverSupervisorImpl</code> 向 <code>BlockManager</code> 存储一个 <code>byteBuffer</code> 为例 ——  <code>BlockManager</code> 在收到 <code>putBytes(byteBuffer)</code> 时，实际是直接调用 <code>doPut(byteBuffer)</code> 的。 那么我们看 <code>doPut(...)</code> 方法（友情提醒，主要看代码里的注释）：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">doPut</span></span>(blockId: <span class="type">BlockId</span>, data: <span class="type">BlockValues</span>, level: <span class="type">StorageLevel</span>, ...)</span><br><span class="line">  : <span class="type">Seq</span>[(<span class="type">BlockId</span>, <span class="type">BlockStatus</span>)] = &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">//【如果  putLevel.replication &gt; 1 的话，就定义这个 future，复制数据到另外的 executor 上】</span></span><br><span class="line">  <span class="keyword">val</span> replicationFuture = data <span class="keyword">match</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> b: <span class="type">ByteBufferValues</span> <span class="keyword">if</span> putLevel.replication &gt; <span class="number">1</span> =&gt;</span><br><span class="line">      <span class="keyword">val</span> bufferView = b.buffer.duplicate()</span><br><span class="line">      <span class="type">Future</span> &#123;</span><br><span class="line">        <span class="comment">//【这里非常重要，会在 future 启动时去实际调用 replicate() 方法，复制数据到另外的 executor 上】</span></span><br><span class="line">        replicate(blockId, bufferView, putLevel)</span><br><span class="line">      &#125;(futureExecutionContext)</span><br><span class="line">    <span class="keyword">case</span> _ =&gt; <span class="literal">null</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  putBlockInfo.synchronized &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 【存储到本机 blockManager 的 blockStore 里】</span></span><br><span class="line">    <span class="keyword">val</span> result = data <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="type">IteratorValues</span>(iterator) =&gt;</span><br><span class="line">        blockStore.putIterator(blockId, iterator, putLevel, returnValues)</span><br><span class="line">      <span class="keyword">case</span> <span class="type">ArrayValues</span>(array) =&gt;</span><br><span class="line">        blockStore.putArray(blockId, array, putLevel, returnValues)</span><br><span class="line">      <span class="keyword">case</span> <span class="type">ByteBufferValues</span>(bytes) =&gt;</span><br><span class="line">        bytes.rewind()</span><br><span class="line">        blockStore.putBytes(blockId, bytes, putLevel)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">      </span><br><span class="line">  <span class="comment">//【再次判断  putLevel.replication &gt; 1】</span></span><br><span class="line">  <span class="keyword">if</span> (putLevel.replication &gt; <span class="number">1</span>) &#123;</span><br><span class="line">    data <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="type">ByteBufferValues</span>(bytes) =&gt;</span><br><span class="line">        <span class="comment">//【如果之前启动了 replicate 的 future，那么这里就同步地等这个 future 结束】</span></span><br><span class="line">        <span class="keyword">if</span> (replicationFuture != <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="type">Await</span>.ready(replicationFuture, <span class="type">Duration</span>.<span class="type">Inf</span>)</span><br><span class="line">        &#125;</span><br><span class="line">      <span class="keyword">case</span> _ =&gt;</span><br><span class="line">        <span class="keyword">val</span> remoteStartTime = <span class="type">System</span>.currentTimeMillis</span><br><span class="line">        <span class="keyword">if</span> (bytesAfterPut == <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="keyword">if</span> (valuesAfterPut == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">SparkException</span>(</span><br><span class="line">              <span class="string">"Underlying put returned neither an Iterator nor bytes! This shouldn't happen."</span>)</span><br><span class="line">          &#125;</span><br><span class="line">          bytesAfterPut = dataSerialize(blockId, valuesAfterPut)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//【否则之前没有启动 replicate 的 future，那么这里就同步地调用 replicate() 方法，复制数据到另外的 executor 上】</span></span><br><span class="line">        replicate(blockId, bytesAfterPut, putLevel)</span><br><span class="line">        logDebug(<span class="string">"Put block %s remotely took %s"</span></span><br><span class="line">          .format(blockId, <span class="type">Utils</span>.getUsedTimeMs(remoteStartTime)))</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>所以，可以看到， <code>BlockManager</code> 的 <code>putBytes()</code> 语义就是承诺了，如果指定需要 replicate，那么当 <code>putBytes()</code> 方法返回时，就一定是存储到本机、并且一定 replicate 到另外的 executor 上了。对于 <code>BlockManager</code> 的 <code>putIterator()</code> 也是同样的语义，因为  <code>BlockManager</code> 的 <code>putIterator()</code> 和 <code>BlockManager</code> 的 <code>putBytes()</code> 一样，都是基于  <code>BlockManager</code> 的 <code>doPut()</code> 来实现的。</p>
+<p>简单总结本小节的解析，<code>Receiver</code> 收到的数据，通过 <code>ReceiverSupervisorImpl</code>，将数据交给 <code>BlockManager</code> 存储；而 <code>BlockManager</code> 本身支持将数据 <code>replicate()</code> 到另外的 executor 上，这样就完成了 <code>Receiver</code> 源头数据的热备过程。</p>
+<p>而在计算时，计算任务首先将获取需要的块数据，这是如果一个 executor 失效导致一份数据丢失，那么计算任务将转而向另一个 executor 上的同一份数据获取数据。因为另一份块数据是现成的、不需要像冷备那样重新读取的，所以这里不会有 recovery time。</p>
+<h2 id="2-冷备"><a href="#2-冷备" class="headerlink" title="(2) 冷备"></a>(2) 冷备</h2><p>!!! 需要同时修改</p>
+<p>冷备是每次存储块数据时，除了存储到本 executor，还会把块数据作为 log 写出到 WriteAheadLog 里作为冷备。这样当 executor 失效时，就由另外的 executor 去读 WAL，再重做 log 来恢复块数据。WAL 通常写到可靠存储如 HDFS 上，所以恢复时可能需要一段 recover time。</p>
+<p>冷备的写出过程如下图 4(c) 过程所示：</p>
+<p><img src="0.imgs/065.png" alt="image"></p>
+<p>这里我们需要插播一下详解 <code>WriteAheadLog</code> 框架。</p>
+<h3 id="WriteAheadLog-框架"><a href="#WriteAheadLog-框架" class="headerlink" title="WriteAheadLog 框架"></a>WriteAheadLog 框架</h3><p><code>WriteAheadLog</code> 的方式在单机 RDBMS、NoSQL/NewSQL 中都有广泛应用，前者比如记录 transaction log 时，后者比如 HBase 插入数据可以先写到 HLog 里。</p>
+<p><code>WriteAheadLog</code> 的特点是顺序写入，所以在做数据备份时效率较高，但在需要恢复数据时又需要顺序读取，所以需要一定 recovery time。</p>
+<p>不过对于 Spark Streaming 的块数据冷备来讲，在恢复时也非常方便。这是因为，对某个块数据的操作只有一次（即新增块数据），而没有后续对块数据的追加、修改、删除操作，这就使得在 WAL 里只会有一条此块数据的 log entry。所以，我们在恢复时只要 seek 到这条 log entry 并读取就可以了，而不需要顺序读取整个 WAL。</p>
+<p>也就是，Spark Streaming 基于 WAL 冷备进行恢复，需要的 recovery time 只是 seek 到并读一条 log entry 的时间，而不是读取整个 WAL 的时间，这个是个非常大的节省。</p>
+<p>Spark Streaming 里的 WAL 框架，由一组抽象类，和一组基于文件的具体实现组成。其类结构关系如下：</p>
+<p><img src="img.png" alt="image"></p>
+<h3 id="WriteAheadLog-WriteAheadLogRecordHandle"><a href="#WriteAheadLog-WriteAheadLogRecordHandle" class="headerlink" title="WriteAheadLog, WriteAheadLogRecordHandle"></a>WriteAheadLog, WriteAheadLogRecordHandle</h3><p><code>WriteAheadLog</code> 是多条 log 的集合，每条具体的 log 的引用就是一个 <code>LogRecordHandle</code>。这两个 abstract 的接口定义如下：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//  来自 WriteAheadLog</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@org</span>.apache.spark.annotation.<span class="type">DeveloperApi</span></span><br><span class="line">public <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">WriteAheadLog</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 【写方法：写入一条 log，将返回一个指向这条 log 的句柄引用】</span></span><br><span class="line">  <span class="keyword">abstract</span> public <span class="type">WriteAheadLogRecordHandle</span> write(<span class="type">ByteBuffer</span> record, long time);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 【读方法：给定一条 log 的句柄引用，读出这条 log】</span></span><br><span class="line">  <span class="keyword">abstract</span> public <span class="type">ByteBuffer</span> read(<span class="type">WriteAheadLogRecordHandle</span> handle);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 【读方法：读取全部 log】</span></span><br><span class="line">  <span class="keyword">abstract</span> public <span class="type">Iterator</span>&lt;<span class="type">ByteBuffer</span>&gt; readAll();</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 【清理过时的 log 条目】</span></span><br><span class="line">  <span class="keyword">abstract</span> public void clean(long threshTime, boolean waitForCompletion);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 【关闭方法】</span></span><br><span class="line">  <span class="keyword">abstract</span> public void close();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  来自 WriteAheadLogRecordHandle</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@org</span>.apache.spark.annotation.<span class="type">DeveloperApi</span></span><br><span class="line">public <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">WriteAheadLogRecordHandle</span> <span class="title">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 【Handle 则是一个空接口，需要具体的子类定义真正的内容】</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里 <code>WriteAheadLog</code> 基于文件的具体实现是 <code>FileBasedWriteAheadLog</code>，<code>WriteAheadLogRecordHandle</code> 基于文件的具体实现是 <code>FileBasedWriteAheadLogSegment</code>，下面我们详细看看这两个具体的类。</p>
+<h3 id="FileBasedWriteAheadLogSegment"><a href="#FileBasedWriteAheadLogSegment" class="headerlink" title="FileBasedWriteAheadLogSegment"></a>FileBasedWriteAheadLogSegment</h3><p><code>FileBasedWriteAheadLog</code> 有 3 个重要的配置项或成员：</p>
+<ul>
+<li><p>rolling 配置项</p>
+<ul>
+<li><code>FileBasedWriteAheadLog</code> 的实现把 log 写到一个文件里（一般是 HDFS 等可靠存储上的文件），然后每隔一段时间就关闭已有文件，产生一些新文件继续写，也就是 rolling 写的方式</li>
+<li>rolling 写的好处是单个文件不会太大，而且删除不用的旧数据特别方便</li>
+<li>这里 rolling 的间隔是由参数 <code>spark.streaming.receiver.writeAheadLog.rollingIntervalSecs（默认 = 60 秒）</code> 控制的</li>
+</ul>
+</li>
+<li><p>WAL 存放的目录：<code>{checkpointDir}/receivedData/{receiverId}</code></p>
+<ul>
+<li><code>{checkpointDir}</code> 在 <code>ssc.checkpoint(checkpointDir)</code> 指定的</li>
+<li><code>{receiverId}</code> 是 <code>Receiver</code> 的 id</li>
+<li>在这个 WAL 目录里，不同的 rolling log 文件的命名规则是 <code>log-{startTime}-{stopTime}</code></li>
+</ul>
+</li>
+<li><p>然后就是 <code>FileBasedWriteAheadLog.currentLogWriter</code></p>
+<ul>
+<li>一个 <code>LogWriter</code> 对应一个 log file，而且 log 文件本身是 rolling 的，那么前一个 log 文件写完成后，对应的 writer 就可以 <code>close()</code> 了，而由新的 writer 负责写新的文件</li>
+<li>这里最新的 <code>LogWriter</code> 就由 <code>currentLogWriter</code> 来指向</li>
+</ul>
+</li>
+</ul>
+<p>接下来就是 <code>FileBasedWriteAheadLog</code>  的读写方法了：</p>
+<ul>
+<li><code>write(byteBuffer: ByteBuffer, time: Long)</code><ul>
+<li>最重要的是先调用 <code>getCurrentWriter()</code>，获取当前的 currentWriter</li>
+<li>注意这里，如果 log file 需要 rolling 成新的了，那么 currentWriter 也需要随之更新；上面  <code>getCurrentWriter()</code> 会完成这个按需更新 <code>currentWriter</code>  的过程</li>
+<li>然后就可以调用 <code>writer.write(byteBuffer)</code> 就可以了</li>
+</ul>
+</li>
+<li><code>read(segment: WriteAheadLogRecordHandle): ByteBuffer</code><ul>
+<li>直接调用 <code>reader.read(fileSegment)</code></li>
+<li>在 reader 的实现里，因为给定了 <code>segment</code> —— 也就是 <code>WriteAheadLogRecordHandle</code>，而 <code>segment</code> 里包含了具体的 log file 和 offset，就可以直接 seek 到这条 log，读出数据并返回</li>
+</ul>
+</li>
+</ul>
+<p>所以总结下可以看到，<code>FileBasedWriteAheadLog</code> 主要是进行 rolling file 的管理，然后将具体的写方法、读方法是由具体的 <code>LogWriter</code> 和 <code>LogReader</code> 来做的。</p>
+<h3 id="WriteAheadLogRecordHandle"><a href="#WriteAheadLogRecordHandle" class="headerlink" title="WriteAheadLogRecordHandle"></a>WriteAheadLogRecordHandle</h3><p>前面我们刚说，<code>WriteAheadLogRecordHandle</code> 是一个 log 句柄的空实现，需要子类指定具体的 log 句柄内容。</p>
+<p>然后在基于的 file 的子类实现 <code>WriteAheadLogRecordHandle</code> 里，就记录了 3 方面内容：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 FileBasedWriteAheadLogSegment</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>[streaming] <span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">FileBasedWriteAheadLogSegment</span>(<span class="params">path: <span class="type">String</span>, offset: <span class="type">Long</span>, length: <span class="type">Int</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">WriteAheadLogRecordHandle</span></span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>path: String</code></li>
+<li><code>offset: Long</code></li>
+<li><code>length: Int</code></li>
+</ul>
+<p>这 3 方面内容就非常直观了，给定文件、偏移和长度，就可以唯一确定一条 log。</p>
+<h3 id="FileBasedWriteAheadLogWriter"><a href="#FileBasedWriteAheadLogWriter" class="headerlink" title="FileBasedWriteAheadLogWriter"></a>FileBasedWriteAheadLogWriter</h3><p><code>FileBasedWriteAheadLogWriter</code> 的实现，就是给定一个文件、给定一个块数据，将数据写到文件里面去。</p>
+<p>然后在完成的时候，记录一下文件 path、offset 和 length，封装为一个 <code>FileBasedWriteAheadLogSegment</code> 返回。</p>
+<p>这里需要注意下的是，在具体的写 HDFS 数据块的时候，需要判断一下具体用的方法，优先使用 <code>hflush()</code>，没有的话就使用 <code>sync()</code>：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 FileBasedWriteAheadLogWriter</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">lazy</span> <span class="keyword">val</span> hadoopFlushMethod = &#123;</span><br><span class="line">  <span class="comment">// Use reflection to get the right flush operation</span></span><br><span class="line">  <span class="keyword">val</span> cls = classOf[<span class="type">FSDataOutputStream</span>]</span><br><span class="line">  <span class="type">Try</span>(cls.getMethod(<span class="string">"hflush"</span>)).orElse(<span class="type">Try</span>(cls.getMethod(<span class="string">"sync"</span>))).toOption</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="FileBasedWriteAheadLogRandomReader"><a href="#FileBasedWriteAheadLogRandomReader" class="headerlink" title="FileBasedWriteAheadLogRandomReader"></a>FileBasedWriteAheadLogRandomReader</h3><p><code>FileBasedWriteAheadLogRandomReader</code> 的主要方法是 <code>read(segment: FileBasedWriteAheadLogSegment): ByteBuffer</code>，即给定一个 log 句柄，返回一条具体的 log。</p>
+<p>这里主要代码如下，注意到其中最关键的是 <code>seek(segment.offset)</code> !</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 FileBasedWriteAheadLogRandomReader</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">read</span></span>(segment: <span class="type">FileBasedWriteAheadLogSegment</span>): <span class="type">ByteBuffer</span> = synchronized &#123;</span><br><span class="line">  assertOpen()</span><br><span class="line">  <span class="comment">// 【seek 到这条 log 所在的 offset】</span></span><br><span class="line">  instream.seek(segment.offset)</span><br><span class="line">  <span class="comment">// 【读一下 length】</span></span><br><span class="line">  <span class="keyword">val</span> nextLength = instream.readInt()</span><br><span class="line">  <span class="type">HdfsUtils</span>.checkState(nextLength == segment.length,</span><br><span class="line">    <span class="string">s"Expected message length to be <span class="subst">$&#123;segment.length&#125;</span>, but was <span class="subst">$nextLength</span>"</span>)</span><br><span class="line">  <span class="keyword">val</span> buffer = <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">Byte</span>](nextLength)</span><br><span class="line">  <span class="comment">// 【读一下具体的内容】</span></span><br><span class="line">  instream.readFully(buffer)</span><br><span class="line">  <span class="comment">// 【以 ByteBuffer 的形式，返回具体的内容】</span></span><br><span class="line">  <span class="type">ByteBuffer</span>.wrap(buffer)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="FileBasedWriteAheadLogReader"><a href="#FileBasedWriteAheadLogReader" class="headerlink" title="FileBasedWriteAheadLogReader"></a>FileBasedWriteAheadLogReader</h3><p><code>FileBasedWriteAheadLogReader</code> 实现跟 <code>FileBasedWriteAheadLogRandomReader</code> 差不多，不过是不需要给定 log 的句柄，而是迭代遍历所有 log：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 FileBasedWriteAheadLogReader</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 【迭代方法：hasNext()】</span></span><br><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">hasNext</span></span>: <span class="type">Boolean</span> = synchronized &#123;</span><br><span class="line">  <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">    <span class="comment">// 【如果已关闭，就肯定不 hasNext 了】</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (nextItem.isDefined) &#123;</span><br><span class="line">    <span class="literal">true</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="comment">// 【读出来下一条，如果有，就说明还确实 hasNext】</span></span><br><span class="line">      <span class="keyword">val</span> length = instream.readInt()</span><br><span class="line">      <span class="keyword">val</span> buffer = <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">Byte</span>](length)</span><br><span class="line">      instream.readFully(buffer)</span><br><span class="line">      nextItem = <span class="type">Some</span>(<span class="type">ByteBuffer</span>.wrap(buffer))</span><br><span class="line">      logTrace(<span class="string">"Read next item "</span> + nextItem.get)</span><br><span class="line">      <span class="literal">true</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> &#123;</span><br><span class="line">     ...</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 【迭代方法：next()】</span></span><br><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">next</span></span>(): <span class="type">ByteBuffer</span> = synchronized &#123;</span><br><span class="line">  <span class="comment">// 【直接返回在 hasNext() 方法里实际读出来的数据】</span></span><br><span class="line">  <span class="keyword">val</span> data = nextItem.getOrElse &#123;</span><br><span class="line">    close()</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IllegalStateException</span>(</span><br><span class="line">      <span class="string">"next called without calling hasNext or after hasNext returned false"</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  nextItem = <span class="type">None</span> <span class="comment">// Ensure the next hasNext call loads new data.</span></span><br><span class="line">  data</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="WAL-总结"><a href="#WAL-总结" class="headerlink" title="WAL 总结"></a>WAL 总结</h3><p>通过上面几个小节，我们看到，Spark Streaming 有一套基于 rolling file 的 WAL 实现，提供一个写方法，两个读方法：</p>
+<ul>
+<li><code>WriteAheadLogRecordHandle write(ByteBuffer record, long time)</code><ul>
+<li>由 <code>FileBasedWriteAheadLogWriter</code> 具体实现</li>
+</ul>
+</li>
+<li>ByteBuffer read(WriteAheadLogRecordHandle handle)`<ul>
+<li>由 <code>FileBasedWriteAheadLogRandomReader</code> 具体实现</li>
+</ul>
+</li>
+<li><code>Iterator&lt;ByteBuffer&gt; readAll()</code><ul>
+<li>由 <code>FileBasedWriteAheadLogReader</code> 具体实现</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-重放"><a href="#3-重放" class="headerlink" title="(3) 重放"></a>(3) 重放</h2><p>如果上游支持重放，比如 Apache Kafka，那么就可以选择不用热备或者冷备来另外存储数据了，而是在失效时换一个 executor 进行数据重放即可。</p>
+<p>具体的，<a href="http://spark.apache.org/docs/latest/streaming-kafka-integration.html" target="_blank" rel="noopener">Spark Streaming 从 Kafka 读取方式有两种</a>：</p>
+<ul>
+<li>基于 <code>Receiver</code> 的<ul>
+<li>这种是将 Kafka Consumer 的偏移管理交给 Kafka —— 将存在 ZooKeeper 里，失效后由 Kafka 去基于 offset 进行重放</li>
+<li>这样可能的问题是，Kafka 将同一个 offset 的数据，重放给两个 batch 实例 —— 从而只能保证 at least once 的语义</li>
+</ul>
+</li>
+<li>Direct 方式，不基于 <code>Receiver</code><ul>
+<li>由 Spark Streaming 直接管理 offset —— 可以给定 offset 范围，直接去 Kafka 的硬盘上读数据，使用 Spark Streaming 自身的均衡来代替 Kafka 做的均衡</li>
+<li>这样可以保证，每个 offset 范围属于且只属于一个 batch，从而保证 exactly-once</li>
+</ul>
+</li>
+</ul>
+<p>这里我们以 Direct 方式为例，详解一下 Spark Streaming 在源头数据实效后，是如果从上游重放数据的。</p>
+<p>这里的实现分为两个层面：</p>
+<ul>
+<li><code>DirectKafkaInputDStream</code>：负责侦测最新 offset，并将 offset 分配至唯一个 batch<ul>
+<li>会在每次 batch 生成时，依靠 <code>latestLeaderOffsets()</code> 方法去侦测最新的 offset</li>
+<li>然后与上一个 batch 侦测到的 offset 相减，就能得到一个 offset 的范围 <code>offsetRange</code></li>
+<li>把这个 offset 范围内的数据，唯一分配到本 batch 来处理</li>
+</ul>
+</li>
+<li><code>KafkaRDD</code>：负责去读指定 offset 范围内的数据，并基于此数据进行计算<ul>
+<li>会生成一个 Kafka 的 <code>SimpleConsumer</code> —— <code>SimpleConsumer</code> 是 Kafka 最底层、直接对着 Kafka 硬盘上的文件读数据的类</li>
+<li>如果 <code>Task</code> 失败，导致任务重新下发，那么 offset 范围仍然维持不变，将直接重新生成一个 Kafka 的 <code>SimpleConsumer</code> 去读数据</li>
+</ul>
+</li>
+</ul>
+<p>所以看 Direct 的方式，归根结底是由 Spark Streaming 框架来负责整个 offset 的侦测、batch 分配、实际读取数据；并且这些分 batch 的信息都是 checkpoint 到可靠存储（一般是 HDFS）了。这就没有用到 Kafka 使用 ZooKeeper 来均衡 consumer 和记录 offset 的功能，而是把 Kafka 直接当成一个底层的文件系统来使用了。</p>
+<p>当然，我们讲上游重放并不只局限于 Kafka，而是说凡是支持消息重放的上游都可以 —— 比如，HDFS 也可以看做一个支持重放的可靠上游 —— FileInputDStream 就是利用重放的方式，保证了 executor 失效后的源头数据的可读性。</p>
+<h2 id="4-忽略"><a href="#4-忽略" class="headerlink" title="(4) 忽略"></a>(4) 忽略</h2><p>最后，如果应用的实时性需求大于准确性，那么一块数据丢失后我们也可以选择忽略、不恢复失效的源头数据。</p>
+<p>假设我们有 r1, r2, r3 这三个 <code>Receiver</code>，而且每 5 秒产生一个 Block，每 15 秒产生一个 batch。那么，每个 batch 有 <code>15 s ÷ 5 block/s/receiver × 3 receiver = 9 block</code>。现在假设 r1 失效，随之也丢失了 3 个 block。</p>
+<p>那么上层应用如何进行忽略？有两种粒度的做法。</p>
+<h3 id="粗粒度忽略"><a href="#粗粒度忽略" class="headerlink" title="粗粒度忽略"></a>粗粒度忽略</h3><p>粗粒度的做法是，如果计算任务试图读取丢失的源头数据时出错，会导致部分 task 计算失败，会进一步导致整个 batch 的 job 失败，最终在 driver 端以 <code>SparkException</code> 的形式报出来 —— 此时我们 catch 住这个 <code>SparkException</code>，就能够屏蔽这个 batch 的 job 失败了。</p>
+<p>粗粒度的这个做法实现起来非常简单，问题是会忽略掉整个 batch 的计算结果。虽然我们还有 6 个 block 是好的，但所有 9 个的数据都会被忽略。</p>
+<h3 id="细粒度忽略"><a href="#细粒度忽略" class="headerlink" title="细粒度忽略"></a>细粒度忽略</h3><p>细粒度的做法是，只将忽略部分局限在丢失的 3 个 block 上，其它部分 6 部分继续保留。目前原生的 Spark Streaming 还不能完全做到，但我们对 Spark Streaming 稍作修改，就可以做到了。</p>
+<p>细粒度基本思路是，在一个计算的 task 发现作为源数据的 block 失效后，不是直接报错，而是另外生成一个空集合作为“修正”了的源头数据，然后继续 task 的计算，并将成功。</p>
+<p>如此一来，仅局限在发生数据丢失的 3 个块数据才会进行“忽略”的过程，6 个好的块数据将正常进行计算。最后整个 job 是成功的。</p>
+<p>当然这里对 Spark Streaming 本身的改动，还需要考虑一些细节，比如只在 Spark Streaming 里生效、不要影响到 Spark Core、SparkSQL，再比如 task 通常都是会失效重试的，我们希望前几次现场重试，只在最后一次重试仍不成功的时候再进行忽略。</p>
+<p>我们把修改的代码，以及使用方法放在这里了，请随用随取。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>我们上面分四个小节介绍了 Spark Streaming 对源头数据的高可用的保障方式，我们用一个表格来总结一下：</p>
+<table><br><tr><br>    <td></td><br>    <td>图示</td><br>    <td>优点</td><br>    <td>缺点</td><br></tr><br><tr><br>    <td>(1) 热备</td><br>    <td><img src="0.imgs/075a.png"></td><br>    <td>无 recover time</td><br>    <td>需要占用双倍资源</td><br></tr><br><tr><br>    <td>(2) 冷备</td><br>    <td><img src="0.imgs/075b.png"></td><br>    <td>十分可靠</td><br>    <td>存在 recover time</td><br></tr><br><tr><br>    <td>(3) 重放</td><br>    <td><img src="0.imgs/075c.png"></td><br>    <td>不占用额外资源</td><br>    <td>存在 recover time</td><br></tr><br><tr><br>    <td>(4) 忽略</td><br>    <td><img src="0.imgs/075d.png"></td><br>    <td>无 recover time</td><br>    <td>准确性有损失</td><br></tr><br></table>
+
+
+<p><br><br><br></p>
+<p>（本文完，参与本文的讨论请 <a href="https://github.com/proflin/CoolplaySpark/issues/11" target="_blank" rel="noopener">猛戳这里</a>，返回目录请 <a href="readme.md">猛戳这里</a>）</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/" title="" target="_blank" rel="external">http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/cofess" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/cofess" target="_blank"><span class="text-dark">昵称</span><small class="ml-1x">Web Developer &amp; Designer</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+       
+    <div id="uyan_frame"></div>
+
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.2 Driver 端长时容错详解/" title="(no title)"><i class="icon icon-angle-left" aria-hidden="true"></i>&nbsp;&nbsp;Newer</a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" title="(no title)">Older&nbsp;&nbsp;<i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning hidden-xs" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-tit">
+            <p>Thank you for your support, I will continue to work hard!</p>
+          </div>
+          <div class="donate-payimg">
+            <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+          </div>
+          <p class="text-muted mv">Scan this qrcode</p>
+          <div class="donate-payselect">
+            <div class="pay_item checked" data-id="alipay" data-src="/images/donate/alipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-alipay" value="alipay" checked>
+                <label class="pay_logo clickable" for="input-alipay"><img src="/images/donate/alipay.jpg" alt="alipay" /></label>
+              </div>
+            </div>
+            <div class="pay_item" data-id="weipay" data-src="/images/donate/weipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-weipay" value="weipay">
+                <label class="pay_logo clickable" for="input-weipay"><img src="/images/donate/weipay.jpg" alt="weipay" /></label>
+              </div>
+            </div>
+          </div>
+          <div class="text-grey">
+            <p>Scan this qrcode, you can sweep yards reward oh!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+  
+    
+    
+    
+        <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+    
+    
+    
+        
+<script defer src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+    
+    
+        
+    
+    <script defer type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=[object Object]"></script>
+
+
+    
+    
+
+
+
+</body>
+</html>

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Hexo</title>
+  <meta name="description" content="ReceiverTraker, ReceivedBlockTracker 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="ReceiverTraker, ReceivedBlockTracker 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.3%20ReceiverTraker,%20ReceivedBlockTracker%20详解/0.imgs/060.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.3%20ReceiverTraker,%20ReceivedBlockTracker%20详解/0.imgs/065.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.3%20ReceiverTraker,%20ReceivedBlockTracker%20详解/0.imgs/060.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.3%20ReceiverTraker,%20ReceivedBlockTracker%20详解/3.imgs/070.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.3%20ReceiverTraker,%20ReceivedBlockTracker%20详解/3.imgs/075.png">
+<meta property="og:updated_time" content="2018-02-09T03:48:41.428Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+<meta name="twitter:description" content="ReceiverTraker, ReceivedBlockTracker 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列">
+<meta name="twitter:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.3%20ReceiverTraker,%20ReceivedBlockTracker%20详解/0.imgs/060.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <!-- font-awesome CSS -->
+  <!-- <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"> -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+    
+    
+
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/cofess" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">昵称</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Web Developer &amp; Designer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav">
+        
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            
+            <p>您好，您是第<span id="busuanzi_value_site_uv">0</span>位访客</p>
+            
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+
+    
+      
+
+    
+      
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/02/">February 2018</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.960Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/Q&A 什么是 end-to-end exactly-once/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.954Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.2 Driver 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.946Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.940Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.930Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" class="article-date">
+	  <time datetime="2018-02-09T03:49:13.930Z" itemprop="datePublished">2018-02-09</time>
+	</a>
+</span>
+        
+        
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry markdown-body" itemprop="articleBody">
+      
+        <h1 id="ReceiverTraker-ReceivedBlockTracker-详解"><a href="#ReceiverTraker-ReceivedBlockTracker-详解" class="headerlink" title="ReceiverTraker, ReceivedBlockTracker 详解"></a>ReceiverTraker, ReceivedBlockTracker 详解</h1><p><strong><em>[酷玩 Spark] Spark Streaming 源码解析系列</em></strong> ，返回目录请 <a href="readme.md">猛戳这里</a></p>
+<p><a href="http://e.qq.com" target="_blank" rel="noopener">「腾讯·广点通」</a>技术团队荣誉出品</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">本系列内容适用范围：</span><br><span class="line"></span><br><span class="line">* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)</span><br><span class="line">* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)</span><br><span class="line">* 2016.11.14 update, Spark 2.0 全系列 √ (已发布：2.0.0, 2.0.1, 2.0.2)</span><br></pre></td></tr></table></figure>
+<p><br><br><br></p>
+<p>阅读本文前，请一定先阅读 <a href="0.1 Spark Streaming 实现思路与模块概述.md">Spark Streaming 实现思路与模块概述</a> 一文，其中概述了 Spark Streaming 的 4 大模块的基本作用，有了全局概念后再看本文对 <code>模块 3：数据产生与导入</code> 细节的解释。</p>
+<h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>我们在 <a href="0.1 Spark Streaming 实现思路与模块概述.md">Spark Streaming 实现思路与模块概述</a> 给出了 <code>模块 3：数据产生与导入</code> 的基本工作流程：</p>
+<ul>
+<li><p>(1) 由 <code>Receiver</code> 的总指挥 <code>ReceiverTracker</code> 分发多个 job（每个 job 有 1 个 task），到多个 executor 上分别启动 <code>ReceiverSupervisor</code> 实例；</p>
+</li>
+<li><p>(2) 每个 <code>ReceiverSupervisor</code> 启动后将马上生成一个用户提供的 <code>Receiver</code> 实现的实例 —— 该 <code>Receiver</code> 实现可以持续产生或者持续接收系统外数据，比如 <code>TwitterReceiver</code> 可以实时爬取 twitter 数据 —— 并在 <code>Receiver</code> 实例生成后调用 <code>Receiver.onStart()</code>。</p>
+</li>
+</ul>
+<p><img src="0.imgs/060.png" alt="image"></p>
+<p>(1)(2) 的过程由上图所示，这时 <code>Receiver</code> 启动工作已运行完毕。</p>
+<p>接下来 <code>ReceiverSupervisor</code> 将在 executor 端作为的主要角色，并且：</p>
+<ul>
+<li><p>(3) <code>Receiver</code> 在 <code>onStart()</code> 启动后，就将<strong>持续不断</strong>地接收外界数据，并持续交给 <code>ReceiverSupervisor</code> 进行数据转储；</p>
+</li>
+<li><p>(4) <code>ReceiverSupervisor</code> <strong>持续不断</strong>地接收到 <code>Receiver</code> 转来的数据：</p>
+<ul>
+<li>如果数据很细小，就需要 <code>BlockGenerator</code> 攒多条数据成一块(4a)、然后再成块存储(4b 或 4c)</li>
+<li><p>反之就不用攒，直接成块存储(4b 或 4c)</p>
+</li>
+<li><p>这里 Spark Streaming 目前支持两种成块存储方式，一种是由 <code>blockManagerskManagerBasedBlockHandler</code> 直接存到 executor 的内存或硬盘，另一种由 <code>WriteAheadLogBasedBlockHandler</code> 是同时写 WAL(4c) 和 executor 的内存或硬盘</p>
+</li>
+</ul>
+</li>
+<li><p>(5) 每次成块在 executor 存储完毕后，<code>ReceiverSupervisor</code> 就会及时上报块数据的 meta 信息给 driver 端的 <code>ReceiverTracker</code>；这里的 meta 信息包括数据的标识 id，数据的位置，数据的条数，数据的大小等信息。</p>
+</li>
+<li><p>(6) <code>ReceiverTracker</code> 再将收到的块数据 meta 信息直接转给自己的成员 <code>ReceivedBlockTracker</code>，由 <code>ReceivedBlockTracker</code> 专门管理收到的块数据 meta 信息。</p>
+</li>
+</ul>
+<p><img src="0.imgs/065.png" alt="image"></p>
+<p>这里 (3)(4)(5)(6) 的过程是一直<strong>持续不断</strong>地发生的，我们也将其在上图里标识出来。</p>
+<p>上面的内容我们已经在 <a href="3.1 Receiver 分发详解.md">Receiver 分发详解</a> 和 <a href="3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解.md">Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解</a> 中介绍过了。</p>
+<p>本文我们详解的是 driver 端的 <code>ReceiverTracker</code> 和 <code>ReceivedBlockTracker</code></p>
+<pre><code>ReceiverTracker      的全限定名是：org.apache.spark.streaming.scheduler.ReceiverTracker
+ReceivedBlockTracker 的全限定名是：org.apache.spark.streaming.scheduler.ReceivedBlockTracker
+</code></pre><h2 id="ReceiverTracker-详解"><a href="#ReceiverTracker-详解" class="headerlink" title="ReceiverTracker 详解"></a>ReceiverTracker 详解</h2><p><code>ReceiverTracker</code> 在 Spark 1.5.0 版本里的代码变动比较大，不过其主要功能还是没怎么改变，我们一一来看：</p>
+<ul>
+<li>(1) <code>ReceiverTracker</code> 分发和监控 <code>Receiver</code><ul>
+<li><code>ReceiverTracker</code> 负责 <code>Receiver</code> 在各个 executor 上的分发</li>
+<li>包括 <code>Receiver</code> 的失败重启</li>
+</ul>
+</li>
+<li>(2) <code>ReceiverTracker</code> 作为 <code>RpcEndpoint</code><ul>
+<li><code>ReceiverTracker</code> 作为 <code>Receiver</code> 的管理者，是各个 <code>Receiver</code> 上报信息的入口</li>
+<li>也是 driver 下达管理命令到 <code>Receiver</code> 的出口</li>
+</ul>
+</li>
+<li>(3) <code>ReceiverTracker</code> 管理已上报的块数据 meta 信息</li>
+</ul>
+<p>整体来看，<code>ReceiverTracker</code> 就是 <code>Receiver</code> 相关信息的中枢。</p>
+<h3 id="1-ReceiverTracker-分发和监控-Receiver"><a href="#1-ReceiverTracker-分发和监控-Receiver" class="headerlink" title="(1) ReceiverTracker 分发和监控 Receiver"></a>(1) ReceiverTracker 分发和监控 Receiver</h3><p><code>ReceiverTracker</code> 分发和监控 <code>Receiver</code> 的内容我们已经在 <a href="3.1 Receiver 分发详解.md">Receiver 分发详解.md</a> 详解过了，我们这里总结一下。</p>
+<p>在 <code>ssc.start()</code> 时，将隐含地调用 <code>ReceiverTracker.start()</code>；而 <code>ReceiverTracker.start()</code> 最重要的任务就是调用自己的 <code>launchReceivers()</code> 方法将 <code>Receiver</code> 分发到多个 executor 上去。然后在每个 executor 上，由 <code>ReceiverSupervisor</code> 来分别启动一个 <code>Receiver</code> 接收数据。这个过程用下图表示：</p>
+<p><img src="0.imgs/060.png" alt="image"></p>
+<p>而且在 1.5.0 版本以来引入了 <code>ReceiverSchedulingPolicy</code>，是在 Spark Streaming 层面添加对 <code>Receiver</code> 的分发目的地的计算，相对于之前版本依赖 Spark Core 的 <code>TaskScheduler</code> 进行通用分发，新的 <code>ReceiverSchedulingPolicy</code> 会对 Streaming 应用的更好的语义理解，也能计算出更好的分发策略。</p>
+<p>并且还通过每个 <code>Receiver</code> 对应 <code>1</code> 个 <code>Job</code> 的方式，保证了 <code>Receiver</code> 的多次分发，和失效后的重启、永活。</p>
+<p>从本小节 <code>ReceiverTracker</code> 分发和监控 <code>Receiver</code> 的角度，我们对以前版本的 Spark Streaming(以 1.4.0 为代表)、和新版本的 Spark Streaming(以 1.5.0 为代表)有总结对比：</p>
+<table><br>    <tr><br>        <td align="center"></td><br>        <td align="center"><strong>Spark Streaming 1.4.0</strong></td><br>        <td align="center"><strong>Spark Streaming 1.5.0</strong></td><br>    </tr><br>    <tr><br>        <td align="center"><strong>Receiver 活性</strong></td><br>        <td align="center">不保证永活</td><br>        <td align="center">无限重试、保证永活</td><br>    </tr><br>    <tr><br>        <td align="center"><strong>Receiver 均衡分发</strong></td><br>        <td align="center">无保证</td><br>        <td align="center">round-robin 策略</td><br>    </tr><br>    <tr><br>        <td align="center"><strong>自定义 Receiver 分发</strong></td><br>        <td align="center">很 tricky</td><br>        <td align="center">方便</td><br>    </tr><br></table>
+
+<h3 id="2-ReceiverTracker-作为-RpcEndpoint"><a href="#2-ReceiverTracker-作为-RpcEndpoint" class="headerlink" title="(2) ReceiverTracker 作为 RpcEndpoint"></a>(2) ReceiverTracker 作为 RpcEndpoint</h3><p><code>RpcEndPoint</code> 可以理解为 RPC 的 server 端，供 client 调用。</p>
+<p><code>ReceiverTracker</code> 作为 <code>RpcEndPoint</code> 的地址 —— 即 driver 的地址 —— 是公开的，可供 <code>Receiver</code> 连接；如果某个 <code>Receiver</code> 连接成功，那么 <code>ReceiverTracker</code> 也就持有了这个 <code>Receiver</code> 的 <code>RpcEndPoint</code>。这样以来，通过发送消息，就可以实现双向通信。</p>
+<p>1.5.0 版本以来，<code>ReceiverTracker</code> 支持的消息有 10 种，我们进行一个总结：</p>
+<table><br>    <tr><br>        <td>StopAllReceivers 消息</td><br>        <td>消息</td><br>        <td>解释</td><br>    </tr><br>    <tr><br>        <td rowspan="5">ReceiverTracker<br>只接收、不回复</td><br>        <td>StartAllReceivers 消息</td><br>        <td>在 ReceiverTracker 刚启动时，发给自己这个消息，触发具体的 schedulingPolicy 计算，和后续分发</td><br>    </tr><br>    <tr><br>        <td>RestartReceiver 消息</td><br>        <td>当初始分发的 executor 不对，或者 Receiver 失效等情况出现，发给自己这个消息，触发 Receiver 重新分发</td><br>    </tr><br>    <tr><br>        <td>CleanupOldBlocks 消息</td><br>        <td>当块数据已完成计算不再需要时，发给自己这个消息，将给所有的 Receiver 转发此 CleanupOldBlocks 消息</td><br>    </tr><br>    <tr><br>        <td>UpdateReceiverRateLimit 消息</td><br>        <td>ReceiverTracker 动态计算出某个 Receiver 新的 rate limit，将给具体的 Receiver 发送 UpdateRateLimit 消息</td><br>    </tr><br>    <tr><br>        <td>ReportError 消息</td><br>        <td>是由 Receiver 上报上来的，将触发 reportError() 方法向 listenerBus 扩散此 error 消息 </td><br>    </tr><br>    <tr><br>        <td rowspan="5">ReceiverTracker<br>接收并回复</td><br>        <td>RegisterReceiver 消息</td><br>        <td>由 Receiver 在试图启动的过程中发来，将回复允许启动，或不允许启动</td><br>    </tr><br>    <tr><br>        <td>AddBlock 消息</td><br>        <td>具体的块数据 meta 上报消息，由 Receiver 发来，将返回成功或失败</td><br>    </tr><br>    <tr><br>        <td>DeregisterReceiver 消息</td><br>        <td>由 Receiver 发来，处理后，无论如何都返回 true</td><br>    </tr><br>    <tr><br>        <td>AllReceiverIds 消息</td><br>        <td>在 ReceiverTracker stop() 的过程中，查询是否还有活跃的 Receiver</td><br>    </tr><br>    <tr><br>        <td>StopAllReceivers 消息</td><br>        <td>在 ReceiverTracker stop() 的过程刚开始时，要求 stop 所有的 Receiver；将向所有的 Receiver 发送 stop 信息</td><br>    </tr><br></table>
+
+<h3 id="3-ReceiverTracker-管理块数据的-meta-信息"><a href="#3-ReceiverTracker-管理块数据的-meta-信息" class="headerlink" title="(3) ReceiverTracker 管理块数据的 meta 信息"></a>(3) ReceiverTracker 管理块数据的 meta 信息</h3><p>一方面 <code>Receiver</code> 将通过 <code>AddBlock</code> 消息上报 meta 信息给 <code>ReceiverTracker</code>，另一方面 <code>JobGenerator</code> 将在每个 batch 开始时要求 <code>ReceiverTracker</code> 将已上报的块信息进行 batch 划分，<code>ReceiverTracker</code> 完整了块数据的 meta 信息管理工作。</p>
+<p>具体的，<code>ReceiverTracker</code> 有一个成员 <code>ReceivedBlockTracker</code>，专门负责已上报的块数据 meta 信息管理。</p>
+<h2 id="ReceivedBlockTracker-详解"><a href="#ReceivedBlockTracker-详解" class="headerlink" title="ReceivedBlockTracker 详解"></a>ReceivedBlockTracker 详解</h2><p>我们刚刚将，<code>ReceivedBlockTracker</code> 专门负责已上报的块数据 meta 信息管理，但 <code>ReceivedBlockTracker</code> 本身不负责对外交互，一切都是通过 <code>ReceiverTracker</code> 来转发 —— 这里 <code>ReceiverTracker</code> 相当于是 <code>ReceivedBlockTracker</code> 的门面（可参考 <a href="http://www.cnblogs.com/zhenyulu/articles/55992.html" target="_blank" rel="noopener">门面模式</a>）。</p>
+<p>在 <code>ReceivedBlockTracker</code> 内部，有几个重要的成员，它们的关系如下：</p>
+<p><img src="3.imgs/070.png" alt="image"> <em>//TODO(lwlin): 此图风格与本系列文章不符，需要美化</em></p>
+<ul>
+<li><code>streamIdToUnallocatedBlockQueues</code><ul>
+<li>维护了上报上来的、但尚未分配入 batch 的 <code>Block</code> 块数据的 meta</li>
+<li>为每个 <code>Receiver</code> 单独维护一个 queue，所以是一个 <code>HashMap：receiverId → mutable.Queue[ReceivedBlockInfo]</code></li>
+</ul>
+</li>
+<li><code>timeToAllocatedBlocks</code><ul>
+<li>维护了上报上来的、已分配入 batch 的 <code>Block</code> 块数据的 meta</li>
+<li>按照 batch 进行一级索引、再按照 <code>receiverId</code> 进行二级索引的 queue，所以是一个 <code>HashMap: time → HashMap</code></li>
+</ul>
+</li>
+<li><code>lastAllocatedBatchTime</code><ul>
+<li>记录了最近一个分配完成的 batch 是哪个</li>
+</ul>
+</li>
+</ul>
+<p>上面是用于状态记录的主要数据结构。对这些状态存取主要是 4 个方法：</p>
+<ul>
+<li><code>addBlock(receivedBlockInfo: ReceivedBlockInfo)</code><ul>
+<li>收到某个 <code>Receiver</code> 上报上来的块数据 meta 信息，将其加入到 <code>streamIdToUnallocatedBlockQueues</code> 里</li>
+</ul>
+</li>
+<li><code>allocateBlocksToBatch(batchTime: Time)</code><ul>
+<li>主要是 <code>JobGenerator</code> 在发起新 batch 的计算时，第一步就调用本方法</li>
+<li>是将 <code>streamIdToUnallocatedBlockQueues</code> 的内容，以传入的 <code>batchTime</code> 参数为 key，添加到 <code>timeToAllocatedBlocks</code> 里</li>
+<li>并更新 <code>lastAllocatedBatchTime</code></li>
+</ul>
+</li>
+<li><code>getBlocksOfBatch(batchTime: Time)</code><ul>
+<li>主要是 <code>JobGenerator</code> 在发起新 batch 的计算时，由 <code>DStreamGraph</code> 生成 RDD DAG 实例时，将调用本方法</li>
+<li>调用本方法查 <code>timeToAllocatedBlocks</code>，获得划入本 batch 的块数据元信息，由此生成处理对应块数据的 RDD</li>
+</ul>
+</li>
+<li><code>cleanupOldBatches(cleanupThreshTime: Time, ...)</code><ul>
+<li>主要是当一个 batch 已经计算完成、可以把已追踪的块数据的 meta 信息清理掉时调用</li>
+<li>将清理 <code>timeToAllocatedBlocks</code> 表里对应 <code>cleanupThreshTime</code> 之前的所有 batch 块数据 meta 信息</li>
+</ul>
+</li>
+</ul>
+<p>这 4 个方法，和对应信息状态的修改关系如下图总结：</p>
+<p><img src="3.imgs/075.png" alt="image"> <em>//TODO(lwlin): 此图风格与本系列文章不符，需要美化</em></p>
+<p>上面即是 <code>ReceivedBlockTracker</code> 的主体内容。</p>
+<p>但我们还需要强调一点非常重要的内容，即 <code>ReceivedBlockTracker</code> 需要对 driver 进行容错保障。也就是，如果 driver 失效，新起来的 driver 必须能够通过 WAL 恢复出失效前的  <code>ReceivedBlockTracker</code> 状态，具体的就需要包括 <code>streamIdToUnallocatedBlockQueues</code>, <code>timeToAllocatedBlocks</code>, <code>lastAllocatedBatchTime</code> 等内容，也即需要前面讲的 4 个方法在修改 <code>ReceivedBlockTracker</code> 的状态信息的时候，要首先写入 WAL，才能在失效后从 WAL 恢复出相关信息。</p>
+<p>有关 WAL 写入和故障恢复的内容，我们将在 <code>模块 4：长时容错</code> 里系统性的详解。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文主要详解了 driver 端的 <code>Receiver</code> 管理者 —— <code>ReceiverTracker</code> —— 的主要功能：</p>
+<ul>
+<li>(1) <code>ReceiverTracker</code> 分发和监控 <code>Receiver</code><ul>
+<li><code>ReceiverTracker</code> 负责 <code>Receiver</code> 在各个 executor 上的分发</li>
+<li>包括 <code>Receiver</code> 的失败重启</li>
+</ul>
+</li>
+<li>(2) <code>ReceiverTracker</code> 作为 <code>RpcEndpoint</code><ul>
+<li><code>ReceiverTracker</code> 作为 <code>Receiver</code> 的管理者，是各个 <code>Receiver</code> 上报信息的入口</li>
+<li>也是 driver 下达管理命令到 <code>Receiver</code> 的出口</li>
+</ul>
+</li>
+<li>(3) <code>ReceiverTracker</code> 管理已上报的块数据 meta 信息<ul>
+<li>委托给自己的成员 <code>ReceivedBlockManager</code> 进行具体管理</li>
+</ul>
+</li>
+</ul>
+<p><br><br><br></p>
+<p>（本文完，参与本文的讨论请 <a href="https://github.com/proflin/CoolplaySpark/issues/8" target="_blank" rel="noopener">猛戳这里</a>，返回目录请 <a href="readme.md">猛戳这里</a>）</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" title="" target="_blank" rel="external">http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/cofess" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/cofess" target="_blank"><span class="text-dark">昵称</span><small class="ml-1x">Web Developer &amp; Designer</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+       
+    <div id="uyan_frame"></div>
+
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/" title="(no title)"><i class="icon icon-angle-left" aria-hidden="true"></i>&nbsp;&nbsp;Newer</a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解/" title="(no title)">Older&nbsp;&nbsp;<i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning hidden-xs" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-tit">
+            <p>Thank you for your support, I will continue to work hard!</p>
+          </div>
+          <div class="donate-payimg">
+            <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+          </div>
+          <p class="text-muted mv">Scan this qrcode</p>
+          <div class="donate-payselect">
+            <div class="pay_item checked" data-id="alipay" data-src="/images/donate/alipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-alipay" value="alipay" checked>
+                <label class="pay_logo clickable" for="input-alipay"><img src="/images/donate/alipay.jpg" alt="alipay" /></label>
+              </div>
+            </div>
+            <div class="pay_item" data-id="weipay" data-src="/images/donate/weipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-weipay" value="weipay">
+                <label class="pay_logo clickable" for="input-weipay"><img src="/images/donate/weipay.jpg" alt="weipay" /></label>
+              </div>
+            </div>
+          </div>
+          <div class="text-grey">
+            <p>Scan this qrcode, you can sweep yards reward oh!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+  
+    
+    
+    
+        <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+    
+    
+    
+        
+<script defer src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+    
+    
+        
+    
+    <script defer type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=[object Object]"></script>
+
+
+    
+    
+
+
+
+</body>
+</html>

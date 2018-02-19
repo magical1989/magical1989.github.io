@@ -4,6 +4,186 @@
 
     
   <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/readme/</loc>
+    <lastmod>2018-02-09T03:48:41.442Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.960Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/Q&A%20%E4%BB%80%E4%B9%88%E6%98%AF%20end-to-end%20exactly-once/</loc>
+    <lastmod>2018-02-09T03:48:41.440Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.954Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/4.2%20Driver%20%E7%AB%AF%E9%95%BF%E6%97%B6%E5%AE%B9%E9%94%99%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.439Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.946Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/4.1%20Executor%20%E7%AB%AF%E9%95%BF%E6%97%B6%E5%AE%B9%E9%94%99%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.438Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.940Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/3.3%20ReceiverTraker,%20ReceivedBlockTracker%20%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.428Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.930Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/3.1%20Receiver%20%E5%88%86%E5%8F%91%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.427Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.914Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/3.2%20Receiver,%20ReceiverSupervisor,%20BlockGenerator,%20ReceivedBlockHandler%20%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.427Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.923Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/2.2%20JobGenerator%20%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.424Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.906Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/2.1%20JobScheduler,%20Job,%20JobSet%20%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.423Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.899Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/1.2%20DStream%20%E7%94%9F%E6%88%90%20RDD%20%E5%AE%9E%E4%BE%8B%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.410Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.888Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/1.1%20DStream,%20DStreamGraph%20%E8%AF%A6%E8%A7%A3/</loc>
+    <lastmod>2018-02-09T03:48:41.409Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.878Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/0.1%20Spark%20Streaming%20%E5%AE%9E%E7%8E%B0%E6%80%9D%E8%B7%AF%E4%B8%8E%E6%A8%A1%E5%9D%97%E6%A6%82%E8%BF%B0/</loc>
+    <lastmod>2018-02-09T03:48:41.379Z</lastmod>
+    <data>
+        <display>
+        <title></title>
+        <pubTime>2018-02-09T03:49:13.868Z</pubTime>
+        
+         
+           
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
     <loc>http://yoursite.com/2018/01/29/hello-world/</loc>
     <lastmod>2018-01-29T01:52:14.136Z</lastmod>
     <data>

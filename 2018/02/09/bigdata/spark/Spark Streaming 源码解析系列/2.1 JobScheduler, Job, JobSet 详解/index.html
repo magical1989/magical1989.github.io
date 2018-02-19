@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Hexo</title>
+  <meta name="description" content="JobScheduler, Job, JobSet 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/2.1 JobScheduler, Job, JobSet 详解/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="JobScheduler, Job, JobSet 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/2.1%20JobScheduler,%20Job,%20JobSet%20详解/0.imgs/050.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/2.1%20JobScheduler,%20Job,%20JobSet%20详解/0.imgs/055.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/2.1%20JobScheduler,%20Job,%20JobSet%20详解/2.imgs/020.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/2.1%20JobScheduler,%20Job,%20JobSet%20详解/2.imgs/021.png">
+<meta property="og:updated_time" content="2018-02-09T03:48:41.423Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+<meta name="twitter:description" content="JobScheduler, Job, JobSet 详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.">
+<meta name="twitter:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/2.1%20JobScheduler,%20Job,%20JobSet%20详解/0.imgs/050.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/2.1 JobScheduler, Job, JobSet 详解/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <!-- font-awesome CSS -->
+  <!-- <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"> -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+    
+    
+
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/cofess" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">昵称</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Web Developer &amp; Designer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav">
+        
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            
+            <p>您好，您是第<span id="busuanzi_value_site_uv">0</span>位访客</p>
+            
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+
+    
+      
+
+    
+      
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/02/">February 2018</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.960Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/Q&A 什么是 end-to-end exactly-once/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.954Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.2 Driver 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.946Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.940Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.930Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-bigdata/spark/Spark Streaming 源码解析系列/2.1 JobScheduler, Job, JobSet 详解" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/2.1 JobScheduler, Job, JobSet 详解/" class="article-date">
+	  <time datetime="2018-02-09T03:49:13.899Z" itemprop="datePublished">2018-02-09</time>
+	</a>
+</span>
+        
+        
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/2.1 JobScheduler, Job, JobSet 详解/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry markdown-body" itemprop="articleBody">
+      
+        <h1 id="JobScheduler-Job-JobSet-详解"><a href="#JobScheduler-Job-JobSet-详解" class="headerlink" title="JobScheduler, Job, JobSet 详解"></a>JobScheduler, Job, JobSet 详解</h1><p><strong><em>[酷玩 Spark] Spark Streaming 源码解析系列</em></strong> ，返回目录请 <a href="readme.md">猛戳这里</a></p>
+<p><a href="http://e.qq.com" target="_blank" rel="noopener">「腾讯·广点通」</a>技术团队荣誉出品</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">本系列内容适用范围：</span><br><span class="line"></span><br><span class="line">* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)</span><br><span class="line">* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)</span><br><span class="line">* 2016.11.14 update, Spark 2.0 全系列 √ (已发布：2.0.0, 2.0.1, 2.0.2)</span><br></pre></td></tr></table></figure>
+<p><br><br><br></p>
+<p>阅读本文前，请一定先阅读 <a href="0.1 Spark Streaming 实现思路与模块概述.md">Spark Streaming 实现思路与模块概述</a> 一文，其中概述了 Spark Streaming 的 4 大模块的基本作用，有了全局概念后再看本文对 <code>模块 2：Job 动态生成</code> 细节的解释。</p>
+<h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>前面在 <a href="0.1 Spark Streaming 实现思路与模块概述.md">Spark Streaming 实现思路与模块概述</a> 和 <a href="1.2 DStream 生成 RDD 实例详解.md">DStream 生成 RDD 实例详解</a> 里我们分析了 <code>DStreamGraph</code> 和 <code>DStream</code> 具有能够实例化 <code>RDD</code> 和 <code>RDD</code> DAG 的能力，下面我们来看 Spark Streaming 是如何将其动态调度的。</p>
+<p>在 Spark Streaming 程序的入口，我们都会定义一个 <code>batchDuration</code>，就是需要每隔多长时间就比照静态的 <code>DStreamGraph</code> 来动态生成一个 RDD DAG 实例。在 Spark Streaming 里，总体负责动态作业调度的具体类是 <code>JobScheduler</code>，在 Spark Streaming 程序在 <code>ssc.start()</code> 开始运行时，将 <code>JobScheduler</code> 的实例给 start() 运行起来。</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 StreamingContext</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">start</span></span>(): <span class="type">Unit</span> = synchronized &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="type">ThreadUtils</span>.runInNewThread(<span class="string">"streaming-start"</span>) &#123;</span><br><span class="line">    sparkContext.setCallSite(startSite.get)</span><br><span class="line">    sparkContext.clearJobGroup()</span><br><span class="line">    sparkContext.setLocalProperty(<span class="type">SparkContext</span>.<span class="type">SPARK_JOB_INTERRUPT_ON_CANCEL</span>, <span class="string">"false"</span>)</span><br><span class="line">    scheduler.start()  <span class="comment">// 【这里调用了 JobScheduler().start()】</span></span><br><span class="line">  &#125;</span><br><span class="line">  state = <span class="type">StreamingContextState</span>.<span class="type">ACTIVE</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="Spark-Streaming-的-Job-总调度者-JobScheduler"><a href="#Spark-Streaming-的-Job-总调度者-JobScheduler" class="headerlink" title="Spark Streaming 的 Job 总调度者 JobScheduler"></a>Spark Streaming 的 Job 总调度者 JobScheduler</h2><p><strong><code>JobScheduler</code> 是 Spark Streaming 的 Job 总调度者</strong>。</p>
+<p><code>JobScheduler</code> 有两个非常重要的成员：<code>JobGenerator</code> 和 <code>ReceiverTracker</code>。<code>JobScheduler</code> 将每个 batch 的 RDD DAG 具体生成工作委托给 <code>JobGenerator</code>，而将源头输入数据的记录工作委托给 <code>ReceiverTracker</code>。</p>
+<p><img src="0.imgs/050.png" alt="image"></p>
+<pre><code>JobScheduler    的全限定名是：org.apache.spark.streaming.scheduler.JobScheduler
+JobGenerator    的全限定名是：org.apache.spark.streaming.scheduler.JobGenerator
+ReceiverTracker 的全限定名是：org.apache.spark.streaming.scheduler.ReceiverTracker
+</code></pre><p><strong><code>JobGenerator</code> 维护了一个定时器</strong>，周期就是我们刚刚提到的 <code>batchDuration</code>，<strong>定时为每个 batch 生成 RDD DAG 的实例</strong>。<br>具体的，根据我们在 <a href="1.2 DStream 生成 RDD 实例详解.md">DStream 生成 RDD 实例详解</a> 中的解析，<code>DStreamGraph.generateJobs(time)</code> 将返回一个 <code>Seq[Job]</code>，其中的每个 <code>Job</code> 是一个 <code>ForEachDStream</code> 实例的 <code>generateJob(time)</code> 返回的结果。</p>
+<p><img src="0.imgs/055.png" alt="image"></p>
+<p>此时，<code>JobGenerator</code> 拿到了 <code>Seq[Job]</code> 后（如上图 <code>(2)</code> ），就将其包装成一个 JobSet（如上图 <code>(3)</code> ），然后就调用 <code>JobScheduler.submitJobSet(jobSet)</code> 来交付回 JobScheduler（如上图 (4) ）。</p>
+<p>那么 <code>JobScheduler</code> 收到 <code>jobSet</code> 后是具体如何处理的呢？我们看其实现：<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 JobScheduler.submitJobSet(jobSet: JobSet)</span></span><br><span class="line"><span class="keyword">if</span> (jobSet.jobs.isEmpty) &#123;</span><br><span class="line">  logInfo(<span class="string">"No jobs added for time "</span> + jobSet.time)</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  listenerBus.post(<span class="type">StreamingListenerBatchSubmitted</span>(jobSet.toBatchInfo))</span><br><span class="line">  jobSets.put(jobSet.time, jobSet)</span><br><span class="line">  <span class="comment">// 【下面这行是最主要的处理逻辑：将每个 job 都在 jobExecutor 线程池中、用 new JobHandler 来处理】</span></span><br><span class="line">  jobSet.jobs.foreach(job =&gt; jobExecutor.execute(<span class="keyword">new</span> <span class="type">JobHandler</span>(job)))</span><br><span class="line">  logInfo(<span class="string">"Added jobs for time "</span> + jobSet.time)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这里最重要的处理逻辑是 <code>job =&gt; jobExecutor.execute(new JobHandler(job))</code>，也就是将每个 job 都在 jobExecutor 线程池中、用 new JobHandler 来处理。</p>
+<h3 id="JobHandler"><a href="#JobHandler" class="headerlink" title="JobHandler"></a>JobHandler</h3><p>先来看 JobHandler 针对 Job 的主要处理逻辑：<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 JobHandler</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">run</span></span>()</span><br><span class="line">&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">// 【发布 JobStarted 消息】</span></span><br><span class="line">  _eventLoop.post(<span class="type">JobStarted</span>(job))</span><br><span class="line">  <span class="type">PairRDDFunctions</span>.disableOutputSpecValidation.withValue(<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="comment">// 【主要逻辑，直接调用了 job.run()】</span></span><br><span class="line">    job.run()</span><br><span class="line">  &#125;</span><br><span class="line">  _eventLoop = eventLoop</span><br><span class="line">  <span class="keyword">if</span> (_eventLoop != <span class="literal">null</span>) &#123;</span><br><span class="line">  <span class="comment">// 【发布 JobCompleted 消息】</span></span><br><span class="line">    _eventLoop.post(<span class="type">JobCompleted</span>(job))</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>也就是说，<code>JobHandler</code> 除了做一些状态记录外，最主要的就是调用 <code>job.run()</code>！这里就与我们在 <a href="1.2 DStream 生成 RDD 实例详解.md">DStream 生成 RDD 实例详解</a> 里分析的对应起来了：<br>在 <code>ForEachDStream.generateJob(time)</code> 时，是定义了 <code>Job</code> 的运行逻辑，即定义了 <code>Job.func</code>。而在 <code>JobHandler</code> 这里，是真正调用了 <code>Job.run()</code>、将触发 <code>Job.func</code> 的真正执行！</p>
+<h3 id="Job-运行的线程池-jobExecutor"><a href="#Job-运行的线程池-jobExecutor" class="headerlink" title="Job 运行的线程池 jobExecutor"></a>Job 运行的线程池 jobExecutor</h3><p>上面 <code>JobHandler</code> 是解决了做什么的问题，本节 <code>jobExecutor</code> 是解决 <code>Job</code> 在哪里做。</p>
+<p>具体的，<code>jobExecutor</code> 是 <code>JobScheduler</code> 的成员：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 来自 JobScheduler</span></span><br><span class="line"><span class="keyword">private</span>[streaming]</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">JobScheduler</span>(<span class="params">val ssc: <span class="type">StreamingContext</span></span>) <span class="keyword">extends</span> <span class="title">Logging</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> numConcurrentJobs = ssc.conf.getInt(<span class="string">"spark.streaming.concurrentJobs"</span>, <span class="number">1</span>)</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> jobExecutor =</span><br><span class="line">      <span class="type">ThreadUtils</span>.newDaemonFixedThreadPool(numConcurrentJobs, <span class="string">"streaming-job-executor"</span>)</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也就是，<code>ThreadUtils.newDaemonFixedThreadPool()</code> 调用将产生一个名为 <code>&quot;streaming-job-executor&quot;</code> 的线程池，所以，<code>Job</code> 将在这个线程池的线程里，被实际执行 <code>func</code>。</p>
+<h2 id="spark-streaming-concurrentJobs-参数"><a href="#spark-streaming-concurrentJobs-参数" class="headerlink" title="spark.streaming.concurrentJobs 参数"></a>spark.streaming.concurrentJobs 参数</h2><p>这里 <code>jobExecutor</code> 的线程池大小，是由 <code>spark.streaming.concurrentJobs</code> 参数来控制的，当没有显式设置时，其取值为 <code>1</code>。</p>
+<p>进一步说，这里 <code>jobExecutor</code> 的线程池大小，就是能够并行执行的 <code>Job</code> 数。而回想前文讲解的 <code>DStreamGraph.generateJobs(time)</code> 过程，一次 batch 产生一个 <code>Seq[Job}</code>，里面可能包含多个 <code>Job</code> —— 所以，确切的，<strong>有几个 <em>output</em> 操作，就调用几次 <code>ForEachDStream.generatorJob(time)</code>，就产生出几个 <code>Job</code> </strong>。</p>
+<p>为了验证这个结果，我们做一个简单的小测试：先设置 <code>spark.streaming.concurrentJobs = 10</code>，然后在每个 batch 里做 <code>2</code> 次 <code>foreachRDD()</code> 这样的 <em>output</em> 操作：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 完整代码可见本文最后的附录</span></span><br><span class="line"><span class="keyword">val</span> <span class="type">BLOCK_INTERVAL</span> = <span class="number">1</span> <span class="comment">// in seconds</span></span><br><span class="line"><span class="keyword">val</span> <span class="type">BATCH_INTERVAL</span> = <span class="number">5</span> <span class="comment">// in seconds</span></span><br><span class="line"><span class="keyword">val</span> <span class="type">CURRENT_JOBS</span> = <span class="number">10</span></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment">// DStream DAG 定义开始</span></span><br><span class="line"><span class="keyword">val</span> inputStream = ssc.receiverStream(...)</span><br><span class="line">inputStream.foreachRDD(_ =&gt; <span class="type">Thread</span>.sleep(<span class="type">Int</span>.<span class="type">MaxValue</span>)) <span class="comment">// output 1</span></span><br><span class="line">inputStream.foreachRDD(_ =&gt; <span class="type">Thread</span>.sleep(<span class="type">Int</span>.<span class="type">MaxValue</span>)) <span class="comment">// output 2</span></span><br><span class="line"><span class="comment">// DStream DAG 定义结束</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>在上面的设定下，我们很容易知道，能够同时在处理的 batch 有 <code>10 / 2 = 5</code> 个，其余的 batch 的 <code>Job</code> 只能处于等待处理状态。</p>
+<p>下面的就是刚才测试代码的运行结果，验证了我们前面的分析和计算：</p>
+<p><img src="2.imgs/020.png" alt="image"></p>
+<h2 id="Spark-Streaming-的-JobSet-Job，与-Spark-Core-的-Job-Stage-TaskSet-Task"><a href="#Spark-Streaming-的-JobSet-Job，与-Spark-Core-的-Job-Stage-TaskSet-Task" class="headerlink" title="Spark Streaming 的 JobSet, Job，与 Spark Core 的 Job, Stage, TaskSet, Task"></a>Spark Streaming 的 JobSet, Job，与 Spark Core 的 Job, Stage, TaskSet, Task</h2><p>最后，我们专门拿出一个小节，辨别一下这 Spark Streaming 的 JobSet, Job，与 Spark Core 的 Job, Stage, TaskSet, Task 这几个概念。</p>
+<pre><code>[Spark Streaming]
+JobSet  的全限定名是：org.apache.spark.streaming.scheduler.JobSet
+Job     的全限定名是：org.apache.spark.streaming.scheduler.Job
+
+[Spark Core]
+Job     没有一个对应的实体类，主要是通过 jobId:Int 来表示一个具体的 job
+Stage   的全限定名是：org.apache.spark.scheduler.Stage
+TaskSet 的全限定名是：org.apache.spark.scheduler.TaskSet
+Task    的全限定名是：org.apache.spark.scheduler.Task
+</code></pre><p>Spark Core 的 Job, Stage, Task 就是我们“日常”谈论 Spark 任务时所说的那些含义，而且在 Spark 的 WebUI 上有非常好的体现，比如下图就是 1 个 <code>Job</code> 包含 3 个 <code>Stage</code>；3 个 <code>Stage</code> 各包含 8, 2, 4 个 <code>Task</code>。而 <code>TaskSet</code> 则是 Spark Core 的内部代码里用的类，是 <code>Task</code> 的集合，和 <code>Stage</code> 是同义的。</p>
+<p><img src="2.imgs/021.png" alt="image"></p>
+<p>而 Spark Streaming 里也有一个 <code>Job</code>，但此 <code>Job</code> 非彼 <code>Job</code>。Spark Streaming 里的 <code>Job</code> 更像是个 <code>Java</code> 里的 <code>Runnable</code>，可以 <code>run()</code> 一个自定义的 <code>func</code> 函数。而这个 <code>func</code>, 可以：</p>
+<ul>
+<li>直接调用 <code>RDD</code> 的 <em>action</em>，从而产生 1 个或多个 Spark Core 的 <code>Job</code></li>
+<li>先打印一行表头；然后调用 <code>firstTen = RDD.collect()</code>，再打印 <code>firstTen</code> 的内容；最后再打印一行表尾 —— 这正是 <code>DStream.print()</code> 的 <code>Job</code> 实现</li>
+<li>也可以是任何用户定义的 code，甚至整个 Spark Streaming 执行过程都不产生任何 Spark Core 的 <code>Job</code> —— 如上一小节所展示的测试代码，其 <code>Job</code> 的 <code>func</code> 实现就是：<code>Thread.sleep(Int.MaxValue)</code>，仅仅是为了让这个 <code>Job</code> 一直跑在 <code>jobExecutor</code> 线程池里，从而测试 <code>jobExecutor</code> 的并行度 :)</li>
+</ul>
+<p>最后，Spark Streaming 的 <code>JobSet</code> 就是多个 <code>Job</code> 的集合了。</p>
+<p>如果对上面 5 个概念做一个层次划分的话（上一层与下一层多是一对多的关系，但不完全准确），就应该是下表的样子：</p>
+<table><br>    <tr><br>        <td></td><br>        <td>Spark Core</td><br>        <td>Spark Streaming</td><br>    </tr><br>    <tr><br>        <td>lv 5</td><br>        <td>RDD DAGs</td><br>        <td>DStreamGraph</td><br>    </tr><br>    <tr><br>        <td>lv 4</td><br>        <td>RDD DAG</td><br>        <td>JobSet</td><br>    </tr><br>    <tr><br>        <td>lv 3</td><br>        <td>Job</td><br>        <td>Job</td><br>    </tr><br>    <tr><br>        <td>lv 2</td><br>        <td>Stage</td><br>        <td>←</td><br>    </tr><br>    <tr><br>        <td>lv 1</td><br>        <td>Task</td><br>        <td>←</td><br>    </tr><br></table>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.concurrent.&#123;<span class="type">Executors</span>, <span class="type">TimeUnit</span>&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.storage.<span class="type">StorageLevel</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.streaming.receiver.<span class="type">Receiver</span></span><br><span class="line"><span class="keyword">import</span> org.apache.spark.streaming.&#123;<span class="type">Seconds</span>, <span class="type">StreamingContext</span>&#125;</span><br><span class="line"><span class="keyword">import</span> org.apache.spark.<span class="type">SparkConf</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">object</span> <span class="title">ConcurrentJobsDemo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">main</span></span>(args: <span class="type">Array</span>[<span class="type">String</span>]) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 完整代码可见本文最后的附录</span></span><br><span class="line">    <span class="keyword">val</span> <span class="type">BLOCK_INTERVAL</span> = <span class="number">1</span> <span class="comment">// in seconds</span></span><br><span class="line">    <span class="keyword">val</span> <span class="type">BATCH_INTERVAL</span> = <span class="number">5</span> <span class="comment">// in seconds</span></span><br><span class="line">    <span class="keyword">val</span> <span class="type">CURRENT_JOBS</span> = <span class="number">10</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> conf = <span class="keyword">new</span> <span class="type">SparkConf</span>()</span><br><span class="line">    conf.setAppName(<span class="keyword">this</span>.getClass.getSimpleName)</span><br><span class="line">    conf.setMaster(<span class="string">"local[2]"</span>)</span><br><span class="line">    conf.set(<span class="string">"spark.streaming.blockInterval"</span>, <span class="string">s"<span class="subst">$&#123;BLOCK_INTERVAL&#125;</span>s"</span>)</span><br><span class="line">    conf.set(<span class="string">"spark.streaming.concurrentJobs"</span>, <span class="string">s"<span class="subst">$&#123;CURRENT_JOBS&#125;</span>"</span>)</span><br><span class="line">    <span class="keyword">val</span> ssc = <span class="keyword">new</span> <span class="type">StreamingContext</span>(conf, <span class="type">Seconds</span>(<span class="type">BATCH_INTERVAL</span>))</span><br><span class="line"></span><br><span class="line">    <span class="comment">// DStream DAG 定义开始</span></span><br><span class="line">    <span class="keyword">val</span> inputStream = ssc.receiverStream(<span class="keyword">new</span> <span class="type">MyReceiver</span>)</span><br><span class="line">    inputStream.foreachRDD(_ =&gt; <span class="type">Thread</span>.sleep(<span class="type">Int</span>.<span class="type">MaxValue</span>)) <span class="comment">// output 1</span></span><br><span class="line">    inputStream.foreachRDD(_ =&gt; <span class="type">Thread</span>.sleep(<span class="type">Int</span>.<span class="type">MaxValue</span>)) <span class="comment">// output 2</span></span><br><span class="line">    <span class="comment">// DStream DAG 定义结束</span></span><br><span class="line"></span><br><span class="line">    ssc.start()</span><br><span class="line">    ssc.awaitTermination()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">MyReceiver</span> <span class="keyword">extends</span> <span class="title">Receiver</span>[<span class="type">String</span>](<span class="params"><span class="type">StorageLevel</span>.<span class="type">MEMORY_ONLY</span></span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">onStart</span></span>() &#123;</span><br><span class="line">      <span class="comment">// invoke store("str") every 100ms</span></span><br><span class="line">      <span class="type">Executors</span>.newScheduledThreadPool(<span class="number">1</span>).scheduleAtFixedRate(<span class="keyword">new</span> <span class="type">Runnable</span> &#123;</span><br><span class="line">        <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">run</span></span>(): <span class="type">Unit</span> = store(<span class="string">"str"</span>)</span><br><span class="line">      &#125;, <span class="number">0</span>, <span class="number">100</span>, <span class="type">TimeUnit</span>.<span class="type">MILLISECONDS</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">onStop</span></span>() &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><br><br><br></p>
+<p>（本文完，参与本文的讨论请 <a href="https://github.com/proflin/CoolplaySpark/issues/4" target="_blank" rel="noopener">猛戳这里</a>，返回目录请 <a href="readme.md">猛戳这里</a>）</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/2.1 JobScheduler, Job, JobSet 详解/" title="" target="_blank" rel="external">http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/2.1 JobScheduler, Job, JobSet 详解/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/cofess" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/cofess" target="_blank"><span class="text-dark">昵称</span><small class="ml-1x">Web Developer &amp; Designer</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+       
+    <div id="uyan_frame"></div>
+
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/2.2 JobGenerator 详解/" title="(no title)"><i class="icon icon-angle-left" aria-hidden="true"></i>&nbsp;&nbsp;Newer</a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/1.2 DStream 生成 RDD 实例详解/" title="(no title)">Older&nbsp;&nbsp;<i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning hidden-xs" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-tit">
+            <p>Thank you for your support, I will continue to work hard!</p>
+          </div>
+          <div class="donate-payimg">
+            <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+          </div>
+          <p class="text-muted mv">Scan this qrcode</p>
+          <div class="donate-payselect">
+            <div class="pay_item checked" data-id="alipay" data-src="/images/donate/alipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-alipay" value="alipay" checked>
+                <label class="pay_logo clickable" for="input-alipay"><img src="/images/donate/alipay.jpg" alt="alipay" /></label>
+              </div>
+            </div>
+            <div class="pay_item" data-id="weipay" data-src="/images/donate/weipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-weipay" value="weipay">
+                <label class="pay_logo clickable" for="input-weipay"><img src="/images/donate/weipay.jpg" alt="weipay" /></label>
+              </div>
+            </div>
+          </div>
+          <div class="text-grey">
+            <p>Scan this qrcode, you can sweep yards reward oh!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+  
+    
+    
+    
+        <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+    
+    
+    
+        
+<script defer src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+    
+    
+        
+    
+    <script defer type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=[object Object]"></script>
+
+
+    
+    
+
+
+
+</body>
+</html>

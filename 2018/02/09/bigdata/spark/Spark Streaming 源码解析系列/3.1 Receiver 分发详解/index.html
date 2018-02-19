@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Hexo</title>
+  <meta name="description" content="Receiver 分发详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.1 Receiver 分发详解/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Receiver 分发详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.1%20Receiver%20分发详解/1.imgs/035.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.1%20Receiver%20分发详解/0.imgs/060.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.1%20Receiver%20分发详解/3.imgs/020.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.1%20Receiver%20分发详解/3.imgs/030.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.1%20Receiver%20分发详解/3.imgs/040.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.1%20Receiver%20分发详解/3.imgs/020.png">
+<meta property="og:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.1%20Receiver%20分发详解/3.imgs/040.png">
+<meta property="og:image" content="https://avatars2.githubusercontent.com/u/1000778?v=3&s=80">
+<meta property="og:updated_time" content="2018-02-09T03:48:41.427Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+<meta name="twitter:description" content="Receiver 分发详解[酷玩 Spark] Spark Streaming 源码解析系列 ，返回目录请 猛戳这里 「腾讯·广点通」技术团队荣誉出品 12345本系列内容适用范围：* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2">
+<meta name="twitter:image" content="http://yoursite.com/2018/02/09/bigdata/spark/Spark%20Streaming%20源码解析系列/3.1%20Receiver%20分发详解/1.imgs/035.png">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.1 Receiver 分发详解/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <!-- font-awesome CSS -->
+  <!-- <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"> -->
+  <link rel="stylesheet" href="/css/style.css">
+  
+    
+    
+
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/cofess" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">昵称</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Web Developer &amp; Designer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Shenzhen, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav">
+        
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            
+            <p>您好，您是第<span id="busuanzi_value_site_uv">0</span>位访客</p>
+            
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+
+    
+      
+
+    
+      
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/02/">February 2018</a><span class="archive-list-count">12</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/01/">January 2018</a><span class="archive-list-count">1</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/readme/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.960Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/Q&A 什么是 end-to-end exactly-once/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.954Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.2 Driver 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.946Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/4.1 Executor 端长时容错详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.940Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.3 ReceiverTraker, ReceivedBlockTracker 详解/" class="title">(no title)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2018-02-09T03:49:13.930Z" itemprop="datePublished">2018-02-09</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-bigdata/spark/Spark Streaming 源码解析系列/3.1 Receiver 分发详解" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.1 Receiver 分发详解/" class="article-date">
+	  <time datetime="2018-02-09T03:49:13.914Z" itemprop="datePublished">2018-02-09</time>
+	</a>
+</span>
+        
+        
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.1 Receiver 分发详解/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry markdown-body" itemprop="articleBody">
+      
+        <h1 id="Receiver-分发详解"><a href="#Receiver-分发详解" class="headerlink" title="Receiver 分发详解"></a>Receiver 分发详解</h1><p><strong><em>[酷玩 Spark] Spark Streaming 源码解析系列</em></strong> ，返回目录请 <a href="readme.md">猛戳这里</a></p>
+<p><a href="http://e.qq.com" target="_blank" rel="noopener">「腾讯·广点通」</a>技术团队荣誉出品</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">本系列内容适用范围：</span><br><span class="line"></span><br><span class="line">* 2017.07.11 update, Spark 2.2 全系列 √ (已发布：2.2.0)</span><br><span class="line">* 2017.10.02 update, Spark 2.1 全系列 √ (已发布：2.1.0, 2.1.1, 2.1.2)</span><br><span class="line">* 2016.11.14 update, Spark 2.0 全系列 √ (已发布：2.0.0, 2.0.1, 2.0.2)</span><br></pre></td></tr></table></figure>
+<p><br><br><br></p>
+<p>阅读本文前，请一定先阅读 <a href="0.1 Spark Streaming 实现思路与模块概述.md">Spark Streaming 实现思路与模块概述</a> 一文，其中概述了 Spark Streaming 的 4 大模块的基本作用，有了全局概念后再看本文对 <code>模块 3：数据产生与导入</code> 细节的解释。</p>
+<h2 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h2><p>我们前面在 <a href="1.1 DStream, DStreamGraph 详解.md">DStream, DStreamGraph 详解</a> 讲到，整个 <code>DStreamGraph</code> 是由 <code>output stream</code> 通过 <em>dependency</em> 引用关系，索引到上游 <code>DStream</code> 节点。而递归的追溯到最上游的 <code>InputDStream</code> 节点时，就没有对其它 <code>DStream</code> 节点的依赖了，因为 <code>InputDStream</code> 节点本身就代表了最原始的数据集。</p>
+<p><img src="1.imgs/035.png" alt="image"></p>
+<p>我们对 <code>模块 3：数据产生与导入</code> 细节的解释，是仅针对 <code>ReceiverInputDStream</code> 及其子类的；其它 <code>InputDStream</code> 子类的讲解，我们在另外的文章中进行。即，本模块的讨论范围是：</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- <span class="type">ReceiverInputDStream</span></span><br><span class="line">  - 子类 <span class="type">SocketInputDStream</span></span><br><span class="line">  - 子类 <span class="type">TwitterInputDStream</span></span><br><span class="line">  - 子类 <span class="type">RawInputDStream</span></span><br><span class="line">  - 子类 <span class="type">FlumePollingInputDStream</span></span><br><span class="line">  - 子类 <span class="type">MQTTInputDStream</span></span><br><span class="line">  - 子类 <span class="type">FlumeInputDStream</span></span><br><span class="line">  - 子类 <span class="type">PluggableInputDStream</span></span><br><span class="line">  - 子类 <span class="type">KafkaInputDStream</span></span><br></pre></td></tr></table></figure>
+<h2 id="ReceiverTracker-分发-Receiver-过程"><a href="#ReceiverTracker-分发-Receiver-过程" class="headerlink" title="ReceiverTracker 分发 Receiver 过程"></a>ReceiverTracker 分发 Receiver 过程</h2><p>我们已经知道，<code>ReceiverTracker</code> 自身运行在 driver 端，是一个管理分布在各个 executor 上的 <code>Receiver</code> 的总指挥者。</p>
+<p>在 <code>ssc.start()</code> 时，将隐含地调用 <code>ReceiverTracker.start()</code>；而 <code>ReceiverTracker.start()</code> 最重要的任务就是调用自己的 <code>launchReceivers()</code> 方法将 <code>Receiver</code> 分发到多个 executor 上去。然后在每个 executor 上，由 <code>ReceiverSupervisor</code> 来分别启动一个 <code>Receiver</code> 接收数据。这个过程用下图表示：</p>
+<p><img src="0.imgs/060.png" alt="image"></p>
+<p>我们将以 1.4.0 和 1.5.0 这两个版本为代表，仔细分析一下 launchReceivers() 的实现。</p>
+<pre><code>1.4.0 代表了 1.5.0 以前的版本，如 1.2.x, 1.3.x, 1.4.x
+
+1.5.0 代表了 1.5.0 以来的版本，如 1.5.x, 1.6.x
+</code></pre><h2 id="Spark-1-4-0-的-launchReceivers-实现"><a href="#Spark-1-4-0-的-launchReceivers-实现" class="headerlink" title="Spark 1.4.0 的 launchReceivers() 实现"></a>Spark 1.4.0 的 launchReceivers() 实现</h2><p>Spark 1.4.0 的 <code>launchReceivers()</code> 的过程如下：</p>
+<ul>
+<li><p>(1.a) <strong>构造 Receiver RDD</strong>。具体的，是先遍历所有的 <code>ReceiverInputStream</code>，获得将要启动的所有 <code>x</code> 个 <code>Receiver</code> 的实例。然后，把这些实例当做 <code>x</code> 份数据，在 driver 端构造一个 <code>RDD</code> 实例，这个 <code>RDD</code> 分为 <code>x</code> 个 partition，每个 partition 包含一个 <code>Receiver</code> 数据（即 <code>Receiver</code> 实例）。</p>
+</li>
+<li><p>(1.b) <strong>定义计算 func</strong>。我们将在多个 executor 上共启动 <code>x</code> 个 <code>Task</code>，每个 <code>Task</code> 负责一个 partition 的数据，即一个 <code>Receiver</code> 实例。我们要对这个 <code>Receiver</code> 实例做的计算定义为 <code>func</code> 函数，具体的，<code>func</code> 是：</p>
+<ul>
+<li>以这个 <code>Receiver</code> 实例为参数，构造新的 <code>ReceiverSupervisor</code> 实例 <code>supervisor</code>：<code>supervisor = new ReceiverSupervisorImpl(receiver, ...)</code></li>
+<li><code>supervisor.start()</code>；这一步将启动新线程启动 <code>Receiver</code> 实例，然后很快返回</li>
+<li><code>supervisor.awaitTermination()</code>；将一直 block 住当前 <code>Task</code> 的线程</li>
+</ul>
+</li>
+<li><p>(1.c) <strong>分发 RDD(Receiver) 和 func 到具体的 executor</strong>。上面 (a)(b) 两步只是在 driver 端定义了 <code>RDD[Receiver]</code> 和 这个 <code>RDD</code> 之上将执行的 <code>func</code>，但并没有具体的去做。这一步是将两者的定义分发到 executor 上去，马上就可以实际执行了。</p>
+</li>
+<li><p>(2) <strong>在各个 executor 端，执行(1.b) 中定义的 <code>func</code></strong>。即启动 <code>Receiver</code> 实例，并一直 block 住当前线程。</p>
+</li>
+</ul>
+<p>这样，通过 1 个 <code>RDD</code> 实例包含 <code>x</code> 个 <code>Receiver</code>，对应启动 1 个 <code>Job</code> 包含 <code>x</code> 个 <code>Task</code>，就可以完成 <code>Receiver</code> 的分发和部署了。上述 (1.a)(1.b)(1.c)(2) 的过程示意如下图：</p>
+<p><img src="3.imgs/020.png" alt="image"></p>
+<p>这里 Spark Streaming 下层的 Spark Core 对 <code>Receiver</code> 分发是毫无感知的，它只是执行了“应用层面” – 对 Spark Core 来讲，Spark Streaming 就是“应用层面”– 的一个普通 <code>Job</code>；但 Spark Streaming 只通过这个普通 <code>Job</code> 即可完“特殊功能”的 <code>Receiver</code> 分发，可谓巧妙巧妙。</p>
+<p>上述逻辑实现的源码请到 <a href="https://github.com/apache/spark/blob/v1.4.0/streaming/src/main/scala/org/apache/spark/streaming/scheduler/ReceiverTracker.scala" target="_blank" rel="noopener">Spark 1.4.0 的 ReceiverTracker</a> 查看。</p>
+<h2 id="Spark-1-5-0-的-launchReceivers-实现"><a href="#Spark-1-5-0-的-launchReceivers-实现" class="headerlink" title="Spark 1.5.0 的 launchReceivers() 实现"></a>Spark 1.5.0 的 launchReceivers() 实现</h2><p>其实上面这个实现，这个长时运行的分发 <code>Job</code> 还存在一些问题：</p>
+<ul>
+<li>如果某个 <code>Task</code> 失败超过 <code>spark.task.maxFailures(默认=4)</code> 次的话，整个 <code>Job</code> 就会失败。这个在长时运行的 Spark Streaming 程序里，<code>Executor</code> 多失效几次就有可能导致 <code>Task</code> 失败达到上限次数了。</li>
+<li>如果某个 <code>Task</code> 失效一下，Spark Core 的 <code>TaskScheduler</code> 会将其重新部署到另一个 executor 上去重跑。但这里的问题在于，负责重跑的 executor 可能是在下发重跑的那一刻是正在执行 <code>Task</code> 数较少的，但不一定能够将 <code>Receiver</code> 分布的最均衡的。</li>
+<li>有个用户 code 可能会想自定义一个 <code>Receiver</code> 的分布策略，比如所有的 <code>Receiver</code> 都部署到同一个节点上去。</li>
+</ul>
+<p>从 1.5.0 开始，Spark Streaming 添加了增强的 <code>Receiver</code> 分发策略。对比之前的版本，主要的变更在于：</p>
+<ol>
+<li>添加可插拔的 <code>ReceiverSchedulingPolicy</code></li>
+<li>把 <code>1</code> 个 <code>Job</code>（包含 <code>x</code> 个 <code>Task</code>），改为 <code>x</code> 个 <code>Job</code>（每个 <code>Job</code> 只包含 <code>1</code> 个 <code>Task</code>）</li>
+<li>添加对 <code>Receiver</code> 的监控重启机制</li>
+</ol>
+<p>我们一个一个看一看。</p>
+<h3 id="1-可插拔的-ReceiverSchedulingPolicy"><a href="#1-可插拔的-ReceiverSchedulingPolicy" class="headerlink" title="(1) 可插拔的 ReceiverSchedulingPolicy"></a>(1) 可插拔的 ReceiverSchedulingPolicy</h3><p><code>ReceiverSchedulingPolicy</code> 的主要目的，是在 Spark Streaming 层面添加对 <code>Receiver</code> 的分发目的地的计算，相对于之前版本依赖 Spark Core 的 <code>TaskScheduler</code> 进行通用分发，新的 <code>ReceiverSchedulingPolicy</code> 会对 Streaming 应用的更好的语义理解，也能计算出更好的分发策略。</p>
+<p><code>ReceiverSchedulingPolicy</code> 有两个方法，分别用于：</p>
+<ul>
+<li><p>在 Streaming 程序首次启动时：</p>
+<ul>
+<li>收集所有 <code>InputDStream</code> 包含的所有 <code>Receiver</code> 实例 —— <code>receivers</code></li>
+<li>收集所有的 executor —— <code>executors</code> —— 作为候选目的地</li>
+<li>然后就调用 <code>ReceiverSchedulingPolicy.scheduleReceivers(receivers, executors)</code> 来计算每个 <code>Receiver</code> 的目的地 executor 列表</li>
+</ul>
+</li>
+<li><p>在 Streaming 程序运行过程中，如果需要重启某个 <code>Receiver</code>：</p>
+<ul>
+<li>将首先看一看之前计算过的目的地 executor 有没有还 alive 的</li>
+<li>如果没有，就需要 <code>ReceiverSchedulingPolicy.rescheduleReceiver(receiver, ...)</code> 来重新计算这个 <code>Receiver</code> 的目的地 executor 列表</li>
+</ul>
+</li>
+</ul>
+<p><a href="https://github.com/apache/spark/blob/master/streaming/src/main/scala/org/apache/spark/streaming/scheduler/ReceiverSchedulingPolicy.scala" target="_blank" rel="noopener">默认的 <code>ReceiverSchedulingPolicy</code></a> 是实现为 <code>round-robin</code> 式的了。我们举例说明下这两个方法：</p>
+<p><img src="3.imgs/030.png" alt="image"></p>
+<p>其中，在 <code>Receiver y</code> 失效时，以前的 Spark Streaming 有可能会在 executor 1 上重启 <code>Receiver y</code>，而 1.5.0 以来，将在 executor 3 上重启 <code>Receiver y</code>。</p>
+<h3 id="2-每个-Receiver-分发有单独的-Job-负责"><a href="#2-每个-Receiver-分发有单独的-Job-负责" class="headerlink" title="(2) 每个 Receiver 分发有单独的 Job 负责"></a>(2) 每个 Receiver 分发有单独的 Job 负责</h3><p>1.5.0 版本以来的 Spark Streaming，是为每个 <code>Receiver</code> 都分配单独的只有 1 个 <code>Task</code> 的 <code>Job</code> 来尝试分发，这与以前版本将 <code>x</code> 个 <code>Receiver</code> 都放到一个有 <code>x</code> 个 <code>Task</code> 的 <code>Job</code> 里分发是很不一样的。</p>
+<p>而且，对于这仅有的一个 <code>Task</code>，只在第 1 次执行时，才尝试启动 <code>Receiver</code>；如果该 <code>Task</code> 因为失效而被调度到其它 executor 执行时，就不再尝试启动 <code>Receiver</code>、只做一个空操作，从而导致本 <code>Job</code> 的状态是成功执行已完成。<code>ReceiverTracker</code> 会另外调起一个 <code>Job</code> ——  有可能会重新计算 <code>Receiver</code> 的目的地 —— 来继续尝试 <code>Receiver</code> 分发……如此直到成功为止。</p>
+<p>另外，由于 Spark Core 的 <code>Task</code> 下发时只会参考并大部分时候尊重 Spark Streaming 设置的 <code>preferredLocation</code> 目的地信息，还是有一定可能该分发 <code>Receiver</code> 的 <code>Job</code> 并没有在我们想要调度的 executor 上运行。此时，在第 1 次执行 <code>Task</code> 时，会首先向 <code>ReceiverTracker</code> 发送 <code>RegisterReceiver</code> 消息，只有得到肯定的答复时，才真正启动 <code>Receiver</code>，否则就继续做一个空操作，导致本 <code>Job</code> 的状态是成功执行已完成。当然，<code>ReceiverTracker</code> 也会另外调起一个 <code>Job</code>，来继续尝试 <code>Receiver</code> 分发……如此直到成功为止。</p>
+<p>我们用图示来表达这个改动：</p>
+<p><img src="3.imgs/040.png" alt="image"></p>
+<p>所以通过上面可以看到，一个 <code>Receiver</code> 的分发 <code>Job</code> 是有可能没有完成分发 <code>Receiver</code> 的目的的，所以 <code>ReceiverTracker</code> 会继续再起一个 <code>Job</code> 来尝试 <code>Receiver</code> 分发。这个机制保证了，如果一次 <code>Receiver</code> 如果没有抵达预先计算好的 executor，就有机会再次进行分发，从而实现在 Spark Streaming 层面对 <code>Receiver</code> 所在位置更好的控制。</p>
+<h3 id="3-对-Receiver-的监控重启机制"><a href="#3-对-Receiver-的监控重启机制" class="headerlink" title="(3) 对 Receiver 的监控重启机制"></a>(3) 对 <code>Receiver</code> 的监控重启机制</h3><p>上面分析了每个 <code>Receiver</code> 都有专门的 <code>Job</code> 来保证分发后，我们发现这样一来，<code>Receiver</code> 的失效重启就不受 <code>spark.task.maxFailures(默认=4)</code> 次的限制了。</p>
+<p>因为现在的 <code>Receiver</code> 重试不是在 <code>Task</code> 级别，而是在 <code>Job</code> 级别；并且 <code>Receiver</code> 失效后并不会导致前一次 <code>Job</code> 失败，而是前一次 <code>Job</code> 成功、并新起一个 <code>Job</code> 再次进行分发。这样一来，不管 Spark Streaming 运行多长时间，<code>Receiver</code> 总是保持活性的，不会随着 executor 的丢失而导致 <code>Receiver</code> 死去。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>我们再简单对比一下 1.4.0 和 1.5.0 版本在 <code>Receiver</code> 分发上的区别：</p>
+<p><img src="3.imgs/020.png" alt="image"><br><img src="3.imgs/040.png" alt="image"></p>
+<p>通过以上分析，我们总结：</p>
+<table><br>    <tr><br>        <td align="center"></td><br>        <td align="center"><strong>Spark Streaming 1.4.0</strong></td><br>        <td align="center"><strong>Spark Streaming 1.5.0</strong></td><br>    </tr><br>    <tr><br>        <td align="center"><strong>Receiver 活性</strong></td><br>        <td align="center">不保证永活</td><br>        <td align="center">无限重试、保证永活</td><br>    </tr><br>    <tr><br>        <td align="center"><strong>Receiver 均衡分发</strong></td><br>        <td align="center">无保证</td><br>        <td align="center">round-robin 策略</td><br>    </tr><br>    <tr><br>        <td align="center"><strong>自定义 Receiver 分发</strong></td><br>        <td align="center">很 tricky</td><br>        <td align="center">方便</td><br>    </tr><br></table>
+
+<h2 id="致谢"><a href="#致谢" class="headerlink" title="致谢"></a>致谢</h2><p>本文所分析的 1.5.0 以来增强的 <code>Receiver</code> 分发策略，是由朱诗雄同学强势贡献给社区的：</p>
+<ul>
+<li><img src="https://avatars2.githubusercontent.com/u/1000778?v=3&amp;s=80" alt="朱诗雄"></li>
+<li>朱诗雄，Apache Spark Committer, Databricks 的中国籍牛牛工程师，已为 Spark 持续贡献代码近两年时间</li>
+<li>强势围观 <a href="https://github.com/zsxwing" target="_blank" rel="noopener">他的 Github</a>，和 <a href="https://github.com/apache/spark/commits/master?author=zsxwing" target="_blank" rel="noopener">他正为 Spark 贡献的代码</a></li>
+</ul>
+<p><br><br><br></p>
+<p>（本文完，参与本文的讨论请 <a href="https://github.com/proflin/CoolplaySpark/issues/6" target="_blank" rel="noopener">猛戳这里</a>，返回目录请 <a href="readme.md">猛戳这里</a>）</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.1 Receiver 分发详解/" title="" target="_blank" rel="external">http://yoursite.com/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.1 Receiver 分发详解/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/cofess" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/cofess" target="_blank"><span class="text-dark">昵称</span><small class="ml-1x">Web Developer &amp; Designer</small></a></h3>
+        <div>个人简介。</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+       
+    <div id="uyan_frame"></div>
+
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/3.2 Receiver, ReceiverSupervisor, BlockGenerator, ReceivedBlockHandler 详解/" title="(no title)"><i class="icon icon-angle-left" aria-hidden="true"></i>&nbsp;&nbsp;Newer</a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/2018/02/09/bigdata/spark/Spark Streaming 源码解析系列/2.2 JobGenerator 详解/" title="(no title)">Older&nbsp;&nbsp;<i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning hidden-xs" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-tit">
+            <p>Thank you for your support, I will continue to work hard!</p>
+          </div>
+          <div class="donate-payimg">
+            <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+          </div>
+          <p class="text-muted mv">Scan this qrcode</p>
+          <div class="donate-payselect">
+            <div class="pay_item checked" data-id="alipay" data-src="/images/donate/alipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-alipay" value="alipay" checked>
+                <label class="pay_logo clickable" for="input-alipay"><img src="/images/donate/alipay.jpg" alt="alipay" /></label>
+              </div>
+            </div>
+            <div class="pay_item" data-id="weipay" data-src="/images/donate/weipayimg.png">
+              <div class="radio">
+                <input type="radio" name="payment" id="input-weipay" value="weipay">
+                <label class="pay_logo clickable" for="input-weipay"><img src="/images/donate/weipay.jpg" alt="weipay" /></label>
+              </div>
+            </div>
+          </div>
+          <div class="text-grey">
+            <p>Scan this qrcode, you can sweep yards reward oh!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/cofess" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="http://weibo.com/cofess" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="https://cdn.bootcss.com/jquery/1.12.4/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+  
+    
+    
+    
+        <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+    
+    
+    
+        
+<script defer src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+    
+    
+        
+    
+    <script defer type="text/javascript" src="http://v2.uyan.cc/code/uyan.js?uid=[object Object]"></script>
+
+
+    
+    
+
+
+
+</body>
+</html>
